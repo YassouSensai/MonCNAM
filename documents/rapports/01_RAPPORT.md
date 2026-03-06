@@ -33,7 +33,7 @@
 
 ## Introduction
 ### Sujet
-Le projet consiste à concevoir et développer une plateforme web centralisée dédiée à la gestion administrative et pédagogique de la filière FIP Informatique du Cnam. L'outil s’inspirera de du système d’information actuelle : [Galao (Landy-Authentification (GALAO))](https://galao.cnam.fr/eiparis/index.php)
+Le projet consiste à concevoir et développer une plateforme web centralisée dédiée à la gestion administrative et pédagogique de la filière FIP Informatique du Cnam. L'outil s’inspirera du système d’information actuelle : [Galao (Landy-Authentification (GALAO))](https://galao.cnam.fr/eiparis/index.php)
 permettant le pilotage des promotions, le suivi de l'assiduité, la gestion du cursus académique, l’accès à l’emploi du temps…
 
 En supplément et en fonction du temps, une fonctionnalité innovante sera ajoutée : elle permettra aux élèves d'émarger à chaque cours via leur smartphone, et aux professeurs d'accéder aux présences de façon digitalisée et sécurisée.
@@ -65,7 +65,7 @@ La plateforme doit avant tout reposer sur une sécurité d'accès rigoureuse, é
 
 Sur le plan de l'ergonomie et de l'interface, le système doit impérativement respecter la charte graphique du Cnam afin d'offrir une expérience utilisateur cohérente avec les autres outils institutionnels. L'interface doit être "responsive", permettant une consultation fluide sur ordinateur pour la gestion administrative, mais aussi sur smartphone pour les étudiants, notamment pour la saisie rapide des codes de présence en début de cours. L'accent doit être mis sur la simplicité et la clarté : l'emploi du temps doit être lisible en un coup d'œil et les formulaires de saisie de notes doivent minimiser les risques d'erreurs de frappe par des contrôles de cohérence immédiats.  
 
-En termes de performance et de disponibilité, l'architecture doit être conçue pour supporter des pics de connexion simultanés, typiquement lors des débuts de cours pour l'émargement ou lors de la publication des résultats d'examens. L'utilisation de technologies modernes comme FastAPI et React, couplée à une base de données PostgreSQL robuste, doit garantir des temps de réponse inférieurs à la seconde pour les requêtes courantes. La conteneurisation via Docker est une exigence technique forte : elle doit permettre un déploiement reproductible et simplifié, facilitant la maintenance et les futures évolutions de la plateforme par de nouvelles équipes.  
+En termes de performance et de disponibilité, l'architecture doit être conçue pour supporter des pics de connexion simultanés, typiquement lors des débuts de cours pour l'émargement ou lors de la publication des résultats d'examens. L'utilisation de technologies modernes comme FastAPI et React, couplée à une base de données robuste tel que PostgreSQL, doit garantir des temps de réponse inférieurs à la seconde pour les requêtes courantes. La conteneurisation via Docker est une exigence technique forte : elle doit permettre un déploiement reproductible et simplifié, facilitant la maintenance et les futures évolutions de la plateforme par de nouvelles équipes.  
 
 Enfin, la maintenabilité et la scalabilité sont des piliers du projet. Le code doit être structuré de manière modulaire pour que de nouvelles fonctionnalités puissent être ajoutées sans compromettre l'existant. L'archivage des données est également une contrainte majeure : le système doit être capable de conserver l'historique des notes et des promotions sur plusieurs années, tout en respectant les principes du RGPD concernant la durée de conservation des données personnelles et la possibilité d'exportation pour l'archivage administratif.  
 
@@ -76,7 +76,7 @@ Voici ci-dessous la liste des tâches (non exhaustive).
 
 ![Liste des tâches](../images/rapport1/taches.png)
 
-Pour chaque tâche, chacun des membres interviendra. Ainsi nous nous coordinons via Github Project. En effet chaque tâche sera divisée en plusieurs sous tâches que nous pourrons nous appriprier.
+Pour chaque tâche, chacun des membres interviendra. Ainsi nous nous coordinons via Github Project. En effet chaque tâche sera divisée en plusieurs sous tâches que nous pourrons nous approprier.
 
 ### Planing
 Planning non définitif en nombre d'heures ce qui comprend les heures du planning et les heures de travail en plus.
