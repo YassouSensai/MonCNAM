@@ -1,3 +1,4 @@
 MonCNAM
 --
-CNAM course information platform bonjour
+CNAM course information platform  
+
