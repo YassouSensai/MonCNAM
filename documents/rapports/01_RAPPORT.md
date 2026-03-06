@@ -6,10 +6,10 @@
 <li>Membres :<ul>  
 	<li>Yassine ELKHALKI</li>
 	<li>Léna RUHAULT</li>
-    <li>Ismail CETINOVA</li>
+	<li>Ismail CETINOVA</li>
 	</ul>
 	</li>
-<li>Dépôt Github : <a>https://github.com/YassouSensai/MonCNAM.git</a></li>
+<li>Dépôt Github : <a href='https://github.com/YassouSensai/MonCNAM.git'>https://github.com/YassouSensai/MonCNAM.git</a></li>
 </ul>
 </td>
 <td style="vertical-align:top; text-align:right; width:40%;">
