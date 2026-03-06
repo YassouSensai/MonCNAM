@@ -1,7 +1,7 @@
 <table>
 <tr>
 <td style="vertical-align:top; padding-right:1.5em; width:60%;">
-<h1>TP1 Réseaux</h1>
+<h1>Rapport n°1</h1>
 <ul>
 <li>Membres :<ul>  
 	<li>Yassine ELKHALKI</li>
