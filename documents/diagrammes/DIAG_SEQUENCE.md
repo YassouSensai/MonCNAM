@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
     autonumber
     actor E as Étudiant
@@ -39,3 +40,4 @@ sequenceDiagram
     API->>DB: UPDATE cours SET etat = 'Validé'
     DB-->>API: Succès
     API-->>APP: Séance verrouillée
+```
