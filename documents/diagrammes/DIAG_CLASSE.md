@@ -9,6 +9,7 @@ classDiagram
         +string email
         +user_role role
         +bool charte_acceptee
+        +date date_rgpd_anonymisation
     }
 
     class Promotion {
