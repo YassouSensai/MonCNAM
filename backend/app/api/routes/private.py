@@ -1,38 +1,22 @@
 from typing import Any
 
-from fastapi import APIRouter
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends
+from sqlmodel import Session
 
-from app.api.deps import SessionDep
-from app.core.security import get_password_hash
-from app.models import (
-    User,
-    UserPublic,
-)
+from app import crud
+from app.api.deps import get_current_active_superuser, SessionDep
+from app.models import UtilisateurCreate, UtilisateurPublic
 
-router = APIRouter(tags=["private"], prefix="/private")
+router = APIRouter()
 
-
-class PrivateUserCreate(BaseModel):
-    email: str
-    password: str
-    full_name: str
-    is_verified: bool = False
-
-
-@router.post("/users/", response_model=UserPublic)
-def create_user(user_in: PrivateUserCreate, session: SessionDep) -> Any:
+@router.post("/users", dependencies=[Depends(get_current_active_superuser)], response_model=UtilisateurPublic)
+def create_user(session: SessionDep, user_in: UtilisateurCreate) -> Any:
     """
-    Create a new user.
+    Create a user (Private).
     """
-
-    user = User(
-        email=user_in.email,
-        full_name=user_in.full_name,
-        hashed_password=get_password_hash(user_in.password),
-    )
-
-    session.add(user)
-    session.commit()
-
+    user = crud.get_utilisateur_by_email(session=session, email=user_in.email)
+    if user:
+        return user
+    
+    user = crud.create_utilisateur(session=session, utilisateur_create=user_in)
     return user
