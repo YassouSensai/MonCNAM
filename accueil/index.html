@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portail MonCNAM</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 { color: #d60028; /* Rouge CNAM */ }
+        p { color: #666; margin-bottom: 30px; }
+        .links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+        a {
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        a:hover { opacity: 0.8; }
+        .btn-admin { background-color: #1e293b; }
+        .btn-teacher { background-color: #0284c7; }
+        .btn-student { background-color: #16a34a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bienvenue sur MonCNAM</h1>
+        <p>Plateforme de gestion de la filière FIP Informatique</p>
+        <div class="links">
+            <a href="http://localhost:3000" class="btn-admin">Espace Scolarité (Admin)</a>
+            <a href="http://localhost:3001" class="btn-teacher">Espace Intervenant</a>
+            <a href="http://localhost:3002" class="btn-student">Espace Apprenti</a>
+        </div>
+    </div>
+</body>
+</html>
