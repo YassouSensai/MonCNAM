@@ -183,3 +183,46 @@ Pour la persistance des données, nous avons choisi PostgreSQL. C'est un SGBD (S
 L'ensemble des services (Frontend, Backend, Base de données) sera conteneurisé via Docker. Ce choix répond à une contrainte forte de maintenabilité : il garantit que la solution fonctionnera à l'identique sur nos postes de développement locaux, lors des tests, et pour la potentielle mise en disposition sur un serveur privé nous appartenant ou bien sur un cloud public à moindre coût. Le choix de docker nous permet également de nous familiariser avec des outils et pratiques largement utilisés en environnement professionnel.
 
 
+## Les réalisations
+Malgré un calendrier serré, nous sommes parvenus à mettre en place un Produit Minimum Viable (MVP) robuste, en se concentrant sur les fondations architecturales et le backend du projet plutôt que sur la multiplication des fonctionnalités.
+
+Nos principales réalisations se concentrent sur les aspects suivants :  
+
+* **Mise en place de l'infrastructure et conteneurisation :** Nous avons réussi à mettre en place l'ensemble de la stack technique (Base de données PostgreSQL, Backend FastAPI et Frontend React) via Docker. Cela garantit un environnement isolé, reproductible et prêt à être déployé sur un serveur.  
+
+* **Architecture de la base de données :** Le schéma relationnel a été intégralement modélisé et instancié. Les relations entre les utilisateurs, les unités d'enseignement et les plannings sont fonctionnelles au niveau de la persistance des données.
+
+* **Développement de l'API REST (Backend) :** Avec FastAPI, nous avons développé les routes principales permettant l'authentification sécurisée des utilisateurs, la récupération des informations de profil, et l'affichage basique des emplois du temps. La documentation automatique via Swagger est opérationnelle.  
+
+* **Interface Utilisateur (Frontend) :** Il s'agit de notre axe d'amélioration principal. Compte tenu de nos appétences plus limitées pour le développement front, du temps restreint et d'une inversion de notre planning initial (nous avons développé le back avant le front, contrairement à ce qui était prévu), nous avons dû nous adapter. Nous avons donc pris la décision de réutiliser des templates, en nous assistant d'outils d'IA pour l'intégration. Bien que nous ne soyons pas pleinement satisfaits du rendu visuel final, l'application développée en React reste fonctionnelle et propose un affichage dynamique qui s'adapte correctement en fonction du type d'utilisateur (RBAC).
+
+## Les non réalisations 
+
+* **L'émargement numérique par QR Code :** Bien qu'il s'agisse d'une fonctionnalité phare de notre cahier des charges, sa mise en œuvre technique soulevait des problématiques de sécurité et de concurrence (génération de jetons cryptographiques éphémères, gestion des requêtes simultanées de toute une promotion en début de cours). Nous avons préféré garantir la fiabilité de l'enregistrement manuel des présences dans la base de données plutôt que de livrer un système automatisé instable.
+
+* **Le système de géolocalisation pour contrer la fraude :** En phase d'analyse, nous nous sommes rendu compte que cette fonctionnalité posait non seulement des défis techniques d'intégration avec l'API du navigateur/mobile, mais soulevait également des questions juridiques complexes liées au RGPD (traitement des données de localisation des étudiants). Elle a donc été écartée de cette version.
+
+* **Le système de notifications automatisées :** La gestion d'envois de mails ciblés (lorsqu'une note est publiée ou qu'un cours est annulé) a été modélisée dans la base de données, mais le service d'envoi en arrière-plan (workers asynchrones) n'a pas été implémenté pour nous concentrer sur le cœur fonctionnel.
+
+## Les difficultés et limites
+
+Ce projet de fin d'année a été particulièrement riche en défis techniques, ce qui nous a poussés à sortir de notre zone de confort et à revoir notre organisation :
+
+* L'une de nos plus grandes difficultés a été la prise en main simultanée de plusieurs technologies modernes que nous découvrions principalement React et FastAPI car nous avions eu des bases en Docker notamment grâce au cours de Dev WEB avec M. Fontaine. L'assimilation des concepts liés à l'asynchronisme en Python et à la gestion des états (hooks) en React a absorbé une part importante de notre temps de développement initial.  
+
+* L'intégration Front/Back : Si le développement isolé des deux couches s'est bien déroulé, leur communication a généré plusieurs obstacles techniques. La configuration de la gestion des échanges de tokens JWT pour l'authentification ont nécessité un investissement conséquent en termes de débogage.  
+
+* La dette technique liée aux templates : Pour accélérer le développement de l'interface utilisateur, nous nous sommes appuyés sur des templates existants. Cependant, adapter ce code générique à nos règles métiers spécifiques s'est parfois avéré plus fastidieux que de coder certains composants "from scratch", ce qui limite aujourd'hui la flexibilité de notre interface.
+
+## Conclusion
+
+La conception et le développement de la plateforme MonCNAM ont représenté une expérience extrêmement formatrice pour notre groupe, marquant une véritable transition entre les projets académiques classiques et les réalités du développement logiciel en entreprise.  
+
+Bien que le produit final ne couvre pas l'intégralité du périmètre initialement imaginé, nous sommes fiers d'avoir réussi à livrer une architecture saine et conteneurisé. Ce projet nous a permis d'assimiler des concepts d'ingénierie fondamentaux : la modélisation complexe d'un système d'information, la création d'une API REST avec FastAPI, et les principes d'authentification par rôle.  
+
+Au-delà de la technique, cette expérience a mis en lumière l'importance cruciale de la gestion de projet, de la planification et de la priorisation des tâches face aux imprévus. MonCNAM dispose aujourd'hui d'une base technologique solide qui ne demande qu'à être enrichie. Les fondations sont prêtes pour accueillir les futures évolutions, telles que l'émargement par QR code, confirmant ainsi la pertinence de nos choix architecturaux initiaux.
+
+Si nous devions reprendre le développement de MonCNAM, nous aurions peut-être choisi de faire le front avec des technologies que nous connaissons déjà comme HTML/CSS avec l'intégration de code JavaScript natif. Nous ne serions par contre pas revenus sur l'utilisation de FastAPI car il s'agit d'un framework extrêmement pertinent pour les développements rapides, et Python est une compétence de plus en plus valorisée en entreprise.
+
+
+***Important, pour lancer le projet, consultez le README.md disponible à la racine du projet***
