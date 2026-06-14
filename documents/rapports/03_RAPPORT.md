@@ -46,13 +46,10 @@
 
 ### Elements rapport 3
 
-6. [Les réalisations]()
-
-7. [Les non réalisations]()
-
-8. [Les difficultés et limites]()
-
-9. [Conclusion]()
+6. [Les réalisations](#les-réalisations)
+7. [Les non réalisations](#les-non-réalisations)
+8. [Les difficultés et limites](#les-difficultés-et-limites)
+9. [Conclusion](#conclusion)
 
 
 
@@ -182,6 +179,7 @@ Pour la persistance des données, nous avons choisi PostgreSQL. C'est un SGBD (S
 ### Infrastructure : Docker
 L'ensemble des services (Frontend, Backend, Base de données) sera conteneurisé via Docker. Ce choix répond à une contrainte forte de maintenabilité : il garantit que la solution fonctionnera à l'identique sur nos postes de développement locaux, lors des tests, et pour la potentielle mise en disposition sur un serveur privé nous appartenant ou bien sur un cloud public à moindre coût. Le choix de docker nous permet également de nous familiariser avec des outils et pratiques largement utilisés en environnement professionnel.
 
+<div style="page-break-after: always;"></div>
 
 ## Les réalisations
 Malgré un calendrier serré, nous sommes parvenus à mettre en place un Produit Minimum Viable (MVP) robuste, en se concentrant sur les fondations architecturales et le backend du projet plutôt que sur la multiplication des fonctionnalités.
@@ -203,6 +201,8 @@ Nos principales réalisations se concentrent sur les aspects suivants :
 * **Le système de géolocalisation pour contrer la fraude :** En phase d'analyse, nous nous sommes rendu compte que cette fonctionnalité posait non seulement des défis techniques d'intégration avec l'API du navigateur/mobile, mais soulevait également des questions juridiques complexes liées au RGPD (traitement des données de localisation des étudiants). Elle a donc été écartée de cette version.
 
 * **Le système de notifications automatisées :** La gestion d'envois de mails ciblés (lorsqu'une note est publiée ou qu'un cours est annulé) a été modélisée dans la base de données, mais le service d'envoi en arrière-plan (workers asynchrones) n'a pas été implémenté pour nous concentrer sur le cœur fonctionnel.
+
+<div style="page-break-after: always;"></div>
 
 ## Les difficultés et limites
 
