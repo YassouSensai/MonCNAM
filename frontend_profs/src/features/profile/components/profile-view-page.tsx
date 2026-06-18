@@ -53,9 +53,9 @@ export default function ProfileViewPage() {
             user={avatarUser}
           />
           <div>
-            <CardTitle>Personal information</CardTitle>
+            <CardTitle>Informations personnelles</CardTitle>
             <CardDescription>
-              Teacher profile details and assigned modules.
+              Détails du profil enseignant et modules affectés.
             </CardDescription>
           </div>
         </CardHeader>
@@ -64,44 +64,44 @@ export default function ProfileViewPage() {
       <div className='grid gap-6 lg:grid-cols-[1.1fr_0.9fr]'>
         <Card>
           <CardHeader>
-            <CardTitle>Profile</CardTitle>
-            <CardDescription>Core teacher information.</CardDescription>
+            <CardTitle>Profil</CardTitle>
+            <CardDescription>Informations essentielles de l'enseignant.</CardDescription>
           </CardHeader>
           <CardContent className='grid gap-4 md:grid-cols-2'>
             <div>
               <p className='text-muted-foreground text-xs uppercase'>
-                Full name
+                Nom complet
               </p>
               <p className='text-sm font-medium'>
                 {loading ? 'Loading…' : (profile?.full_name ?? avatarUser?.fullName ?? '—')}
               </p>
             </div>
             <div>
-              <p className='text-muted-foreground text-xs uppercase'>Teacher ID</p>
+              <p className='text-muted-foreground text-xs uppercase'>ID enseignant</p>
               <p className='text-sm font-medium'>
                 {loading ? '—' : String(profile?.teacher_id ?? '—')}
               </p>
             </div>
             <div>
-              <p className='text-muted-foreground text-xs uppercase'>Email</p>
+              <p className='text-muted-foreground text-xs uppercase'>E-mail</p>
               <p className='text-sm font-medium'>
                 {loading ? '—' : (profile?.email ?? avatarUser?.emailAddresses[0]?.emailAddress ?? '—')}
               </p>
             </div>
             <div>
               <p className='text-muted-foreground text-xs uppercase'>
-                Department
+                Département
               </p>
               <p className='text-sm font-medium'>
                 {loading ? '—' : (profile?.department ?? user?.department ?? '—')}
               </p>
             </div>
             <div>
-              <p className='text-muted-foreground text-xs uppercase'>Office</p>
+              <p className='text-muted-foreground text-xs uppercase'>Bureau</p>
               <p className='text-sm font-medium'>—</p>
             </div>
             <div>
-              <p className='text-muted-foreground text-xs uppercase'>Phone</p>
+              <p className='text-muted-foreground text-xs uppercase'>Téléphone</p>
               <p className='text-sm font-medium'>—</p>
             </div>
           </CardContent>
@@ -109,12 +109,12 @@ export default function ProfileViewPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Assigned modules</CardTitle>
-            <CardDescription>Current teaching responsibilities.</CardDescription>
+            <CardTitle>Modules affectés</CardTitle>
+            <CardDescription>Responsabilités d'enseignement actuelles.</CardDescription>
           </CardHeader>
           <CardContent className='flex flex-wrap gap-2'>
             {loading ? (
-              <Badge variant='secondary'>Loading…</Badge>
+              <Badge variant='secondary'>Chargement…</Badge>
             ) : modules.length ? (
               modules.map((module) => (
                 <Badge key={module.teacher_module_id} variant='secondary'>
@@ -122,7 +122,7 @@ export default function ProfileViewPage() {
                 </Badge>
               ))
             ) : (
-              <Badge variant='secondary'>No assigned modules</Badge>
+              <Badge variant='secondary'>Aucun module affecté</Badge>
             )}
           </CardContent>
         </Card>
@@ -131,7 +131,7 @@ export default function ProfileViewPage() {
       <Card>
         <CardHeader>
           <CardTitle>Actions</CardTitle>
-          <CardDescription>Account-level options.</CardDescription>
+          <CardDescription>Options du compte.</CardDescription>
         </CardHeader>
         <CardContent className='flex flex-wrap gap-2'>
           <Button
@@ -140,7 +140,7 @@ export default function ProfileViewPage() {
               logout();
             }}
           >
-            Logout
+            Déconnexion
           </Button>
         </CardContent>
       </Card>

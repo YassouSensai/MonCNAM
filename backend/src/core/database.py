@@ -84,6 +84,9 @@ def init_db():
                         index.create(bind=engine, checkfirst=True)
                     except Exception as e:
                         logger.debug(f"ℹ️ Index create skipped/failed for {index.name}: {e}")
+
+        # Migrations incrémentales — ADD COLUMN IF NOT EXISTS est idempotent
+        _run_incremental_migrations()
         
         # Log created tables in order
         logger.info("✅ All tables created successfully!")
@@ -104,6 +107,20 @@ def init_db():
     else:
         logger.error("❌ Cannot initialize database - connection failed!")
         raise Exception("Database connection failed")
+
+def _run_incremental_migrations():
+    """Apply safe, idempotent ALTER TABLE migrations at startup."""
+    migrations = [
+        "ALTER TABLE public.s_day ADD COLUMN IF NOT EXISTS week_start DATE DEFAULT NULL",
+    ]
+    with engine.connect() as conn:
+        for sql in migrations:
+            try:
+                conn.execute(text(sql))
+                conn.commit()
+            except Exception as e:
+                logger.warning(f"⚠️ Migration skipped: {e}")
+
 
 def get_session() -> Generator[SQLModelSession, None, None]:
     """Get database session"""

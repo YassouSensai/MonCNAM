@@ -32,7 +32,7 @@ type Props<Row> = {
 export function DataTable<Row>({
   rows,
   columns,
-  searchPlaceholder = 'Search…',
+  searchPlaceholder = 'Rechercher…',
   searchFn,
   emptyState,
   onRowClick,
@@ -96,7 +96,7 @@ export function DataTable<Row>({
         />
         <div className='flex items-center justify-between gap-2 sm:justify-end'>
           <div className='text-xs text-muted-foreground'>
-            {sorted.length} result{sorted.length === 1 ? '' : 's'}
+            {sorted.length} résultat{sorted.length === 1 ? '' : 's'}
           </div>
           <Select
             value={String(pageSize)}
@@ -174,7 +174,7 @@ export function DataTable<Row>({
             {paged.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className='text-muted-foreground'>
-                  {emptyState ?? 'No results.'}
+                  {emptyState ?? 'Aucun résultat.'}
                 </TableCell>
               </TableRow>
             ) : null}

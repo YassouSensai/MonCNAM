@@ -224,13 +224,19 @@ class SessionController:
         # Check each record - if ABSENT, increment number_of_absences in Enrollment
         for record in records:
             if record.status == AttendanceStatus.ABSENT:
-                # Get the enrollment associated with this attendance record
                 enrollment = self.session.get(Enrollment, record.enrollement_id)
                 if enrollment:
-                    # Increment the absence count
                     enrollment.number_of_absences += 1
+                    if (
+                        not enrollment.is_excluded
+                        and (
+                            enrollment.number_of_absences >= 3
+                            or enrollment.number_of_absences_justified >= 5
+                        )
+                    ):
+                        enrollment.is_excluded = True
                     self.session.add(enrollment)
-        
+
         self.session.commit()
         
         present = sum(1 for r in records if r.status == AttendanceStatus.PRESENT)

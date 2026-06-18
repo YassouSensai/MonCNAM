@@ -1,36 +1,30 @@
 import type { ReactNode } from 'react';
 
-
-import { APP_CONFIG } from '@/config/app-config';
-import { Logo } from '@/components/layout/logo';
-
-
-export default function Layout({
-  children
-}: Readonly<{ children: ReactNode }>) {
+export default function Layout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <main>
-      <div className='grid h-dvh justify-center p-2 lg:grid-cols-2'>
-        <div className='relative order-1 hidden h-full rounded-3xl bg-[#009485] lg:flex'>
-          <div className='absolute flex top-10 space-y-1 px-10 text-primary-foreground'>
-            <Logo />
-            <div className='items-center p-4'>
-            <h1 className='text-6xl font-medium'>{APP_CONFIG.name}</h1>
-            <p className='text-xl pt-3'>Empowering academic excellence through Intelligent Presence.</p>
-            </div>
-          </div>
-
-          <div className='absolute bottom-10 flex w-full justify-between px-10'>
-            <div className='flex-1 space-y-1 text-primary-foreground'>
-              <h2 className='font-medium'>Need help?</h2>
-              <p className='text-sm'>
-                Follow instructions in the received email, or contact your administrator.
-              </p>
-            </div>
-          </div>
+    <div className='min-h-screen grid lg:grid-cols-2'>
+      <div className='bg-[#D60028] hidden lg:flex flex-col justify-between p-12 text-white'>
+        <div className='flex items-center gap-3'>
+          <span className='bg-white text-[#D60028] font-black text-xl px-3 py-1 rounded-md tracking-widest'>
+            CNAM
+          </span>
+          <span className='text-2xl font-bold'>MonCNAM</span>
         </div>
-        <div className='relative order-1 flex h-full'>{children}</div>
+        <div>
+          <blockquote className='text-3xl font-semibold leading-snug mb-4'>
+            Démarrez vos séances, suivez les présences et traitez les justificatifs en toute simplicité.
+          </blockquote>
+          <p className='text-white/70 text-sm'>
+            Conservatoire national des arts et métiers — Espace intervenant
+          </p>
+        </div>
+        <p className='text-white/50 text-xs'>
+          © 2025 CNAM – Tous droits réservés.
+        </p>
       </div>
-    </main>
+      <div className='flex items-center justify-center p-8'>
+        {children}
+      </div>
+    </div>
   );
 }

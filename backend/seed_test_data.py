@@ -141,9 +141,9 @@ def seed_levels(session: Session) -> list:
     print("\n📚 Creating Levels...")
     
     levels_data = [
-        {"name": "Computer Science Year 1", "year_level": "L1"},
-        {"name": "Computer Science Year 2", "year_level": "L2"},
-        {"name": "Computer Science Year 3", "year_level": "L3"},
+        {"name": "Informatique 1ère année", "year_level": "L1"},
+        {"name": "Informatique 2ème année", "year_level": "L2"},
+        {"name": "Informatique 3ème année", "year_level": "L3"},
     ]
     
     levels = []
@@ -168,14 +168,14 @@ def seed_admins(session: Session) -> list:
     
     admins_data = [
         {
-            "full_name": "Dr. Ahmed Ben Ali",
-            "email": "admin@university.dz",
-            "department": "Computer Science Department",
+            "full_name": "Sandra BOSSE",
+            "email": "admin@lecnam.net",
+            "department": "Administration",
             "password": "admin123"
         },
         {
-            "full_name": "Prof. Fatima Zohra",
-            "email": "fatima.admin@university.dz",
+            "full_name": "Cédric DU MOUZA",
+            "email": "cedric@lecnam.net",
             "department": "Administration",
             "password": "admin456"
         }
@@ -218,29 +218,29 @@ def seed_modules(session: Session, levels: list) -> dict:
     
     # Modules for Year 1 (only use fields that exist in DB: name, code, room)
     year1_modules = [
-        {"name": "Introduction to Programming", "code": "CS101", "room": "Lab A1"},
-        {"name": "Mathematics for CS", "code": "MATH101", "room": "Room 101"},
-        {"name": "Computer Architecture", "code": "CS102", "room": "Room 102"},
-        {"name": "English for IT", "code": "ENG101", "room": "Room 201"},
-        {"name": "Data Structures", "code": "CS103", "room": "Lab A2"},
+        {"name": "Introduction à la programmation", "code": "INF101", "room": "Salle TP A1"},
+        {"name": "Mathématiques pour l'informatique", "code": "MATH101", "room": "Salle 101"},
+        {"name": "Architecture des ordinateurs", "code": "INF102", "room": "Salle 102"},
+        {"name": "Anglais technique", "code": "ANG101", "room": "Salle 201"},
+        {"name": "Structures de données", "code": "INF103", "room": "Salle TP A2"},
     ]
-    
+
     # Modules for Year 2
     year2_modules = [
-        {"name": "Object-Oriented Programming", "code": "CS201", "room": "Lab B1"},
-        {"name": "Database Systems", "code": "CS202", "room": "Lab B2"},
-        {"name": "Algorithms", "code": "CS203", "room": "Room 301"},
-        {"name": "Operating Systems", "code": "CS204", "room": "Room 302"},
-        {"name": "Web Development", "code": "CS205", "room": "Lab B3"},
+        {"name": "Programmation orientée objet", "code": "INF201", "room": "Salle TP B1"},
+        {"name": "Bases de données", "code": "INF202", "room": "Salle TP B2"},
+        {"name": "Algorithmique avancée", "code": "INF203", "room": "Salle 301"},
+        {"name": "Systèmes d'exploitation", "code": "INF204", "room": "Salle 302"},
+        {"name": "Développement web", "code": "INF205", "room": "Salle TP B3"},
     ]
-    
+
     # Modules for Year 3
     year3_modules = [
-        {"name": "Software Engineering", "code": "CS301", "room": "Room 401"},
-        {"name": "Artificial Intelligence", "code": "CS302", "room": "Lab C1"},
-        {"name": "Computer Networks", "code": "CS303", "room": "Lab C2"},
-        {"name": "Mobile Development", "code": "CS304", "room": "Lab C3"},
-        {"name": "Capstone Project", "code": "CS305", "room": "Project Lab"},
+        {"name": "Génie logiciel", "code": "INF301", "room": "Salle 401"},
+        {"name": "Intelligence artificielle", "code": "INF302", "room": "Salle TP C1"},
+        {"name": "Réseaux informatiques", "code": "INF303", "room": "Salle TP C2"},
+        {"name": "Développement mobile", "code": "INF304", "room": "Salle TP C3"},
+        {"name": "Projet de fin d'études", "code": "INF305", "room": "Salle Projet"},
     ]
     
     all_modules = [year1_modules, year2_modules, year3_modules]
@@ -270,11 +270,11 @@ def seed_teachers(session: Session) -> list:
     print("\n👨‍🏫 Creating Teachers...")
     
     teachers_data = [
-        {"full_name": "Dr. Mohamed Larbi", "email": "m.larbi@university.dz", "department": "Computer Science"},
-        {"full_name": "Dr. Amina Khelif", "email": "a.khelif@university.dz", "department": "Computer Science"},
-        {"full_name": "Prof. Youcef Brahimi", "email": "y.brahimi@university.dz", "department": "Mathematics"},
-        {"full_name": "Dr. Samia Benali", "email": "s.benali@university.dz", "department": "Computer Science"},
-        {"full_name": "Dr. Karim Meziane", "email": "k.meziane@university.dz", "department": "Networks"},
+        {"full_name": "Meziane YACOUB", "email": "meziane.yacoub@lecnam.net", "department": "Informatique"},
+        {"full_name": "Faten ATIGUI", "email": "faten.atigui@lecnam.net", "department": "Informatique"},
+        {"full_name": "Gerard CANESI", "email": "gerard.canesi@lecnam.net", "department": "Mathématiques"},
+        {"full_name": "Michel CRUCIANU", "email": "michel.crucianu@lecnam.net", "department": "Informatique"},
+        {"full_name": "Cedric DU MOUZA", "email": "cedric.du-mouza@lecnam.net", "department": "Réseaux"},
     ]
     
     teachers = []
@@ -337,7 +337,7 @@ def seed_schedules(session: Session, levels: list, modules_by_level: dict) -> di
     schedules = {}
     days = [ScheduleDays.MONDAY, ScheduleDays.TUESDAY, ScheduleDays.WEDNESDAY, 
             ScheduleDays.THURSDAY, ScheduleDays.SUNDAY]
-    time_slots = ["08:00-09:30", "09:45-11:15", "11:30-13:00", "14:00-15:30", "15:45-17:15"]
+    time_slots = ["09:00-10:30", "10:45-12:15", "13:00-14:30", "14:45-16:15", "16:30-18:00"]
     
     for level in levels:
         # Create schedule
@@ -381,11 +381,18 @@ def seed_students(session: Session, levels: list, modules_by_level: dict) -> lis
     """Create students with auto-enrollment"""
     print("\n🎓 Creating Students with Auto-Enrollment...")
     
-    # Student names (realistic Algerian names)
-    first_names = ["Ali", "Omar", "Yassine", "Amine", "Sofiane", "Riad", "Bilal", 
-                   "Imane", "Sara", "Lina", "Nour", "Amira", "Meriem", "Rania"]
-    last_names = ["Boudiaf", "Benali", "Hamidi", "Mansouri", "Belkacem", "Zidane",
-                  "Benmoussa", "Cherifi", "Hadj", "Mebarki", "Saadi", "Taleb"]
+    first_names = [
+        "Lucas", "Hugo", "Nathan", "Théo", "Maxime", "Romain", "Antoine",
+        "Julien", "Baptiste", "Nicolas", "Thomas", "Pierre", "Alexandre",
+        "Léa", "Camille", "Manon", "Chloé", "Emma", "Inès", "Lucie",
+        "Marie", "Pauline", "Sarah", "Anaïs", "Jade", "Océane", "Zoé"
+    ]
+    last_names = [
+        "Martin", "Bernard", "Thomas", "Petit", "Robert", "Richard",
+        "Durand", "Dubois", "Moreau", "Laurent", "Simon", "Michel",
+        "Lefebvre", "Leroy", "Roux", "David", "Bertrand", "Morel",
+        "Fournier", "Girard", "Bonnet", "Dupont", "Lambert", "Fontaine"
+    ]
     
     students = []
     student_count = 0
@@ -398,7 +405,7 @@ def seed_students(session: Session, levels: list, modules_by_level: dict) -> lis
             first = random.choice(first_names)
             last = random.choice(last_names)
             full_name = f"{first} {last}"
-            email = f"{first.lower()}.{last.lower()}{student_count}@student.university.dz"
+            email = f"{first.lower()}.{last.lower()}{student_count}@lecnam.net"
             
             # Create user
             user = User(
@@ -561,11 +568,11 @@ def seed_justifications(session: Session, attendance_records: list) -> list:
     records_to_justify = random.sample(absent_records, min(num_justifications, len(absent_records)))
     
     comments = [
-        "Medical appointment - doctor's certificate attached",
-        "Family emergency",
-        "Transportation issues due to strike",
-        "Illness - medical certificate provided",
-        "Official university event participation"
+        "Rendez-vous médical — certificat du médecin joint.",
+        "Urgence familiale.",
+        "Problème de transport lié à une grève.",
+        "Maladie — certificat médical fourni.",
+        "Participation à un événement officiel universitaire."
     ]
     
     statuses = [JustificationStatus.PENDING, JustificationStatus.APPROVED, JustificationStatus.REJECTED]
@@ -604,10 +611,10 @@ def seed_notifications(session: Session, students: list, admins: list) -> list:
     notifications = []
     
     notification_templates = [
-        {"title": "Welcome to the System", "message": "Welcome to the Attendance Management System!", "type": NotificationType.JUSTIFICATION_APPROVED},
-        {"title": "Justification Approved", "message": "Your justification has been approved.", "type": NotificationType.JUSTIFICATION_APPROVED},
-        {"title": "Justification Rejected", "message": "Your justification has been rejected. Please contact admin.", "type": NotificationType.JUSTIFICATION_REJECTED},
-        {"title": "New Justification", "message": "A new justification has been submitted for review.", "type": NotificationType.JUSTIFICATION_SUBMITTED},
+        {"title": "Bienvenue sur MonCNAM", "message": "Bienvenue sur le système de gestion des présences !", "type": NotificationType.JUSTIFICATION_APPROVED},
+        {"title": "Justificatif approuvé", "message": "Votre justificatif d'absence a été approuvé.", "type": NotificationType.JUSTIFICATION_APPROVED},
+        {"title": "Justificatif rejeté", "message": "Votre justificatif a été rejeté. Contactez l'administration.", "type": NotificationType.JUSTIFICATION_REJECTED},
+        {"title": "Nouveau justificatif", "message": "Un nouveau justificatif a été soumis et est en attente de traitement.", "type": NotificationType.JUSTIFICATION_SUBMITTED},
     ]
     
     # Add notifications to some students
@@ -626,8 +633,8 @@ def seed_notifications(session: Session, students: list, admins: list) -> list:
     # Add notifications to admins
     for admin_data in admins:
         notification = Notification(
-            title="System Update",
-            message="New students have been enrolled in the system.",
+            title="Mise à jour du système",
+            message="De nouveaux étudiants ont été inscrits dans le système.",
             type=NotificationType.JUSTIFICATION_SUBMITTED,
             is_read=False,
             user_id=admin_data["user"].id
@@ -650,7 +657,7 @@ def seed_reports(session: Session, admins: list) -> list:
     for admin_data in admins:
         # Monthly report
         report1 = Report(
-            content="Monthly Attendance Report - December 2025",
+            content="Rapport mensuel de présence — Décembre 2025",
             period_start=datetime(2025, 12, 1, tzinfo=timezone.utc),
             period_end=datetime(2025, 12, 31, tzinfo=timezone.utc),
             generated_date=datetime.now(timezone.utc),
@@ -663,7 +670,7 @@ def seed_reports(session: Session, admins: list) -> list:
         
         # Weekly report
         report2 = Report(
-            content="Weekly Attendance Report - Week 3 January 2026",
+            content="Rapport hebdomadaire de présence — Semaine 3 janvier 2026",
             period_start=datetime(2026, 1, 13, tzinfo=timezone.utc),
             period_end=datetime(2026, 1, 19, tzinfo=timezone.utc),
             generated_date=datetime.now(timezone.utc),
@@ -723,10 +730,10 @@ def print_summary(data: dict):
     print("🎉 TEST DATA READY FOR API TESTING!")
     print("=" * 60)
     
-    print("\n📋 TEST CREDENTIALS:")
-    print("   Admin: admin@university.dz / admin123")
-    print("   Teacher: m.larbi@university.dz / teacher123")
-    print("   Student: (check database for emails) / student123")
+    print("\n📋 IDENTIFIANTS DE TEST :")
+    print("   Admin    : admin@lecnam.net / admin123")
+    print("   Professeur: jp.dupont@lecnam.net / teacher123")
+    print("   Apprenti : (voir la base de données pour les emails) / student123")
     print("\n🌐 API Docs: http://127.0.0.1:8000/api/docs")
 
 

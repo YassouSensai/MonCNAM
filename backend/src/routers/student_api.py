@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile
 from sqlmodel import Session, select
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, ConfigDict, Field
-from datetime import datetime
+from datetime import datetime, date
 import os
 import uuid
 import shutil
@@ -56,7 +56,8 @@ class SDayInfo(BaseModel):
     module_name: Optional[str] = None
     module_code: Optional[str] = None
     room: Optional[str] = None
-    
+    week_start: Optional[str] = None
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -320,12 +321,16 @@ def get_student_from_user(db: Session, user: User) -> Student:
     description="Get the current student's complete profile including user info, level, schedule, and sdays."
 )
 async def get_student_profile(
+    week_start: Optional[date] = Query(
+        default=None,
+        description="Lundi de la semaine souhaitée (YYYY-MM-DD). Omis = template récurrent."
+    ),
     current_user: User = Depends(get_current_student),
     db: Session = Depends(get_session)
 ) -> Dict[str, Any]:
     """
     Get student's complete profile with all related information.
-    
+
     Returns:
         - Student info (ID, user_id, level_id)
         - User info (name, email, department, status)
@@ -334,7 +339,7 @@ async def get_student_profile(
         - Attendance statistics
     """
     controller = StudentController(db)
-    return controller.get_profile(current_user.id)
+    return controller.get_profile(current_user.id, week_start=week_start)
 
 
 # ==================== ATTENDANCE ENDPOINTS ====================
@@ -568,7 +573,7 @@ async def get_my_justifications(
 )
 async def submit_justification(
     attendance_record_id: int = Form(..., description="ID of the attendance record to justify"),
-    comment: str = Form(..., min_length=10, max_length=1000, description="Explanation for the absence"),
+    comment: str = Form(..., min_length=1, max_length=1000, description="Explanation for the absence"),
     file: Optional[UploadFile] = File(default=None, description="Optional supporting document (PDF, JPG, PNG)"),
     current_user: User = Depends(get_current_student),
     db: Session = Depends(get_session)
@@ -654,24 +659,26 @@ async def submit_justification(
 @student_router.get(
     "/schedule",
     summary="Get My Schedule",
-    description="Get the schedule for the student's level."
+    description="Get the schedule for the student's level for a given week."
 )
 async def get_my_schedule(
+    week_start: Optional[date] = Query(
+        default=None,
+        description="Lundi de la semaine souhaitée (YYYY-MM-DD). Omis = template récurrent."
+    ),
     current_user: User = Depends(get_current_student),
     db: Session = Depends(get_session)
 ) -> Dict[str, Any]:
     """
     Get the weekly schedule for the student's level.
-    
-    Returns:
-        - Schedule info
-        - List of sdays with day, time, and module info
+    Si week_start est fourni, retourne les sdays de cette semaine (avec fallback template).
+    Sinon retourne le template récurrent.
     """
     student = get_student_from_user(db, current_user)
     controller = StudentController(db)
-    
-    profile = controller.get_profile(current_user.id)
-    
+
+    profile = controller.get_profile(current_user.id, week_start=week_start)
+
     return {
         "success": True,
         "student_id": student.id,

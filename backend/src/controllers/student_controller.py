@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
 from sqlmodel import Session, select, and_
 from fastapi import HTTPException, status, UploadFile
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 import os
 import uuid
 from sqlalchemy import func
@@ -456,13 +456,14 @@ class StudentController:
         
         return enrollment
     
-    def get_profile(self, user_id: int) -> Dict[str, Any]:
+    def get_profile(self, user_id: int, week_start: Optional[date] = None) -> Dict[str, Any]:
         """
         Get complete student profile with user info, level, schedule, and sdays.
-        
+
         Args:
             user_id: The user ID of the student
-            
+            week_start: date (lundi de la semaine) ou None pour le template
+
         Returns:
             dict: Complete student profile with all related information
         """
@@ -473,15 +474,15 @@ class StudentController:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-        
+
         # Get student
         student = self.get_student_by_user_id(user_id)
-        
+
         # Get level info
         level_info = None
         schedule_info = None
         sdays_info = []
-        
+
         if student.level_id:
             level = self.session.get(Level, student.level_id)
             if level:
@@ -491,23 +492,31 @@ class StudentController:
                     "year_level": level.year_level,
                     "created_at": level.created_at
                 }
-                
+
                 # Get schedule for this level
                 schedule = self.session.exec(
                     select(Schedule).where(Schedule.level_id == level.id)
                 ).first()
-                
+
                 if schedule:
                     schedule_info = {
                         "id": schedule.id,
                         "level_id": schedule.level_id,
                         "last_updated": schedule.last_updated
                     }
-                    
-                    # Get sdays for this schedule (fetch modules in bulk)
-                    sdays = self.session.exec(
+
+                    # Fetch all sdays then filter by week
+                    all_sdays = self.session.exec(
                         select(SDay).where(SDay.schedule_id == schedule.id)
                     ).all()
+
+                    if week_start is not None:
+                        dated = [s for s in all_sdays if s.week_start == week_start]
+                        template = [s for s in all_sdays if s.week_start is None]
+                        dated_keys = {(s.day, s.time) for s in dated}
+                        sdays = dated + [s for s in template if (s.day, s.time) not in dated_keys]
+                    else:
+                        sdays = [s for s in all_sdays if s.week_start is None]
 
                     module_ids = {int(s.module_id) for s in sdays if s.module_id is not None}
                     modules = (
@@ -526,7 +535,8 @@ class StudentController:
                             "module_id": sday.module_id,
                             "module_name": module.name if module else None,
                             "module_code": module.code if module else None,
-                            "room": module.room if module else None
+                            "room": module.room if module else None,
+                            "week_start": sday.week_start.isoformat() if sday.week_start else None,
                         })
         
         # Enrollments + attendance summary (aggregated)

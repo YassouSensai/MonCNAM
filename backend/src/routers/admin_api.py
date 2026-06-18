@@ -11,7 +11,7 @@ All endpoints require admin authentication via JWT/OAuth2.
 from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlmodel import Session, select
 from typing import List, Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, date
 from pydantic import BaseModel, Field, ConfigDict
 
 # Database and authentication dependencies
@@ -104,6 +104,7 @@ class BulkTeacherModuleAssignRequest(BaseModel):
 class ModuleCreateRequest(BaseModel):
     """Request schema for creating a module"""
     name: str = Field(..., min_length=1, max_length=100)
+    code: str = Field(..., min_length=1, max_length=20)
     level_id: int
     room: Optional[str] = None
 
@@ -125,6 +126,8 @@ class SDayCreateRequest(BaseModel):
     day: ScheduleDays
     time: str = Field(..., description="Time slot, e.g., '08:00-10:00'")
     module_id: int
+    # None = template récurrent ; YYYY-MM-DD = lundi de la semaine spécifique
+    week_start: Optional[date] = None
 
 
 class SDayUpdateRequest(BaseModel):
@@ -132,6 +135,7 @@ class SDayUpdateRequest(BaseModel):
     day: Optional[ScheduleDays] = None
     time: Optional[str] = None
     module_id: Optional[int] = None
+    week_start: Optional[date] = None
 
 
 class ReportGenerateRequest(BaseModel):
@@ -204,6 +208,40 @@ async def get_admin_profile(
 
 # ==================== LEVEL ENDPOINTS ====================
 
+def _build_sdays_for_week(db: Session, schedule_id: int, week_start: Optional[date]) -> list:
+    """
+    Retourne les sdays pour une semaine donnée.
+    Si week_start est fourni : sdays datés de cette semaine, avec fallback template
+    pour les créneaux (day, time) non couverts.
+    Si week_start est None : sdays template uniquement.
+    """
+    all_sdays = db.exec(select(SDay).where(SDay.schedule_id == schedule_id)).all()
+
+    if week_start is None:
+        sdays = [s for s in all_sdays if s.week_start is None]
+    else:
+        dated = [s for s in all_sdays if s.week_start == week_start]
+        template = [s for s in all_sdays if s.week_start is None]
+        dated_keys = {(s.day, s.time) for s in dated}
+        # Inclure le template pour les créneaux non couverts par la semaine datée
+        merged = dated + [s for s in template if (s.day, s.time) not in dated_keys]
+        sdays = merged
+
+    result = []
+    for sday in sdays:
+        module = db.get(Module, sday.module_id)
+        result.append({
+            "id": sday.id,
+            "day": sday.day.value if sday.day else None,
+            "time": sday.time,
+            "module_id": sday.module_id,
+            "module_name": module.name if module else None,
+            "module_code": module.code if module else None,
+            "week_start": sday.week_start.isoformat() if sday.week_start else None,
+        })
+    return result
+
+
 @admin_router.get(
     "/levels",
     response_model=Dict[str, Any],
@@ -211,26 +249,27 @@ async def get_admin_profile(
     description="Get all levels with their associated modules."
 )
 async def get_all_levels(
+    week_start: Optional[date] = Query(default=None, description="Lundi de la semaine (YYYY-MM-DD). Omis = template."),
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_session)
 ) -> Dict[str, Any]:
     """
     Get all levels with their modules, schedules, and SDays.
-    
+
     Returns a list of all levels, each containing:
     - Level info (id, name, year_level)
     - List of modules belonging to the level
     - Schedule with all SDays (time slots)
     """
     levels = db.exec(select(Level)).all()
-    
+
     levels_data = []
     for level in levels:
         # Get modules for this level
         modules = db.exec(
             select(Module).where(Module.level_id == level.id)
         ).all()
-        
+
         modules_data = [
             {
                 "id": module.id,
@@ -240,38 +279,22 @@ async def get_all_levels(
             }
             for module in modules
         ]
-        
+
         # Get schedule for this level
         schedule = db.exec(
             select(Schedule).where(Schedule.level_id == level.id)
         ).first()
-        
+
         schedule_data = None
         if schedule:
-            # Get all SDays for this schedule
-            sdays = db.exec(
-                select(SDay).where(SDay.schedule_id == schedule.id)
-            ).all()
-            
-            sdays_data = []
-            for sday in sdays:
-                module = db.get(Module, sday.module_id)
-                sdays_data.append({
-                    "id": sday.id,
-                    "day": sday.day.value if sday.day else None,
-                    "time": sday.time,
-                    "module_id": sday.module_id,
-                    "module_name": module.name if module else None,
-                    "module_code": module.code if module else None
-                })
-            
+            sdays_data = _build_sdays_for_week(db, schedule.id, week_start)
             schedule_data = {
                 "id": schedule.id,
                 "last_updated": schedule.last_updated.isoformat() if schedule.last_updated else None,
                 "sdays": sdays_data,
                 "sdays_count": len(sdays_data)
             }
-        
+
         levels_data.append({
             "id": level.id,
             "name": level.name,
@@ -281,7 +304,7 @@ async def get_all_levels(
             "module_count": len(modules_data),
             "schedule": schedule_data
         })
-    
+
     return {
         "success": True,
         "data": levels_data,
@@ -1234,6 +1257,7 @@ async def create_module(
     controller = AdminController(db)
     module = controller.create_module(
         name=request.name,
+        code=request.code,
         level_id=request.level_id,
         room=request.room
     )
@@ -1385,11 +1409,12 @@ async def add_sday(
         level_id=request.level_id,
         day=request.day,
         time=request.time,
-        module_id=request.module_id
+        module_id=request.module_id,
+        week_start=request.week_start,
     )
-    
+
     module = db.get(Module, sday.module_id)
-    
+
     return {
         "success": True,
         "message": "SDay added successfully",
@@ -1399,7 +1424,8 @@ async def add_sday(
             "time": sday.time,
             "schedule_id": sday.schedule_id,
             "module_id": sday.module_id,
-            "module_name": module.name if module else None
+            "module_name": module.name if module else None,
+            "week_start": sday.week_start.isoformat() if sday.week_start else None,
         }
     }
 
@@ -1427,11 +1453,13 @@ async def update_sday(
         sday_id=sday_id,
         day=request.day,
         time=request.time,
-        module_id=request.module_id
+        module_id=request.module_id,
+        week_start=request.week_start,
+        update_week_start='week_start' in request.model_fields_set,
     )
-    
+
     module = db.get(Module, sday.module_id)
-    
+
     return {
         "success": True,
         "message": "SDay updated successfully",
@@ -1441,7 +1469,8 @@ async def update_sday(
             "time": sday.time,
             "schedule_id": sday.schedule_id,
             "module_id": sday.module_id,
-            "module_name": module.name if module else None
+            "module_name": module.name if module else None,
+            "week_start": sday.week_start.isoformat() if sday.week_start else None,
         }
     }
 

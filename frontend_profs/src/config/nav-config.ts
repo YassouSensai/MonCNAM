@@ -34,7 +34,7 @@ import { NavItem } from '@/types';
  */
 export const navItems: NavItem[] = [
   {
-    title: 'Dashboard',
+    title: 'Tableau de bord',
     url: '/dashboard/overview',
     icon: 'dashboard',
     isActive: false,
@@ -42,7 +42,7 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Create Session',
+    title: 'Créer une séance',
     url: '/dashboard/session',
     icon: 'session',
     shortcut: ['c', 's'],
@@ -50,7 +50,7 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Active Session',
+    title: 'Séance active',
     url: '/dashboard/active-session',
     icon: 'activeSession',
     badge: 'Live',
@@ -59,7 +59,7 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Attendance Records',
+    title: 'Relevés de présence',
     url: '/dashboard/attendance',
     icon: 'attendance',
     shortcut: ['a', 'r'],
@@ -67,7 +67,7 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Justifications',
+    title: 'Justificatifs',
     url: '/dashboard/justifications',
     icon: 'justifications',
     shortcut: ['p', 'j'],
@@ -75,7 +75,7 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Personal Info',
+    title: 'Informations personnelles',
     url: '/dashboard/profile',
     icon: 'profile',
     shortcut: ['p', 'i'],
@@ -83,7 +83,7 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Timetable',
+    title: 'Emploi du temps',
     url: '/dashboard/timetable',
     icon: 'timetable',
     shortcut: ['t', 't'],

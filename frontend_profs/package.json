@@ -1,10 +1,7 @@
 {
-  "name": "next-shadcn-dashboard-starter",
+  "name": "moncnam-profs",
   "version": "1.0.0",
   "private": true,
-  "author": {
-    "name": "Kiran"
-  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -40,7 +37,6 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@sentry/nextjs": "^9.47.1",
     "@tabler/icons-react": "^3.36.0",
     "@tailwindcss/postcss": "^4.1.18",
     "class-variance-authority": "^0.7.1",

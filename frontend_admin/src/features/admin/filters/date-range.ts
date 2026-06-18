@@ -23,21 +23,21 @@ export function resolveDateRange(value: DateRangeValue, now = new Date()) {
   if (value.preset === 'today') {
     const start = new Date(now);
     start.setHours(0, 0, 0, 0);
-    return { start, end, label: 'Today' };
+    return { start, end, label: "Aujourd'hui" };
   }
 
   if (value.preset === 'week') {
     const start = new Date(now);
     start.setDate(now.getDate() - 6);
     start.setHours(0, 0, 0, 0);
-    return { start, end, label: 'This week' };
+    return { start, end, label: 'Cette semaine' };
   }
 
   if (value.preset === 'month') {
     const start = new Date(now);
     start.setDate(1);
     start.setHours(0, 0, 0, 0);
-    return { start, end, label: 'This month' };
+    return { start, end, label: 'Ce mois-ci' };
   }
 
   const start = value.from ? new Date(`${value.from}T00:00:00`) : new Date(now);
@@ -47,6 +47,6 @@ export function resolveDateRange(value: DateRangeValue, now = new Date()) {
   if (Number.isNaN(start.getTime()) || Number.isNaN(customEnd.getTime())) {
     return resolveDateRange({ preset: 'today' }, now);
   }
-  return { start, end: customEnd, label: 'Custom' };
+  return { start, end: customEnd, label: 'Personnalisé' };
 }
 

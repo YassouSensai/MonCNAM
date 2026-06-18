@@ -27,11 +27,11 @@ body {
 }
 
 .theme-default-scaled {
-  --primary: var(--color-neutral-600);
-  --primary-foreground: var(--color-neutral-50);
+  --primary: oklch(0.47 0.22 22);
+  --primary-foreground: oklch(0.985 0 0);
 
   @variant dark {
-    --primary: var(--color-neutral-500);
-    --primary-foreground: var(--color-neutral-50);
+    --primary: oklch(0.62 0.22 22);
+    --primary-foreground: oklch(0.985 0 0);
   }
 }

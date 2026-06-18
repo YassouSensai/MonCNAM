@@ -24,7 +24,7 @@ def send_email(*, to_email: str, subject: str, text: str, html: Optional[str] = 
 		logger.warning("EMAIL_ENABLED=1 but SMTP_HOST is not set; skipping email to %s", to_email)
 		return
 
-	from_email = settings.SMTP_FROM or settings.SMTP_USER or "no-reply@hodory.local"
+	from_email = settings.SMTP_FROM or settings.SMTP_USER or "no-reply@lecnam.net"
 
 	msg = EmailMessage()
 	msg["From"] = from_email

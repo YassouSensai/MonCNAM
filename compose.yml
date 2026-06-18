@@ -3,29 +3,35 @@ services:
     image: postgres:15-alpine
     container_name: moncnam_db
     environment:
-      - POSTGRES_USER=hodory
-      - POSTGRES_PASSWORD=hodory
-      - POSTGRES_DB=hodory
+      - POSTGRES_USER=moncnam
+      - POSTGRES_PASSWORD=moncnam
+      - POSTGRES_DB=moncnam
     ports:
       - "5445:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moncnam -d moncnam"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   backend:
     image: python:3.11-slim
     container_name: moncnam_backend
     working_dir: /app
     volumes:
-      - ./backend:/app 
+      - ./backend:/app
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://hodory:hodory@db:5432/hodory
+      - DATABASE_URL=postgresql://moncnam:moncnam@db:5432/moncnam
       - SECRET_KEY=cle_secrete_moncnam_tres_longue_123
       - INIT_DB_ON_STARTUP=1
       - RELOAD=1
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: >
       sh -c "pip install --no-cache-dir -r requirements.txt &&
              python runserver.py"
@@ -42,40 +48,49 @@ services:
     image: node:20-alpine
     container_name: moncnam_admin
     working_dir: /app
+    stdin_open: true
+    tty: true
     volumes:
       - ./frontend_admin:/app
     ports:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - BACKEND_INTERNAL_URL=http://backend:8000/api
       - WATCHPACK_POLLING=true
-    command: sh -c "npm install && npm run dev -- -p 3000 -H 0.0.0.0"
+    command: sh -c "npm install && npx next dev --port 3000 --hostname 0.0.0.0"
 
   teacher:
     image: node:20-alpine
     container_name: moncnam_teacher
     working_dir: /app
+    stdin_open: true
+    tty: true
     volumes:
       - ./frontend_profs:/app
     ports:
       - "3001:3001"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - BACKEND_INTERNAL_URL=http://backend:8000/api
       - WATCHPACK_POLLING=true
-    command: sh -c "npm install && npm run dev -- -p 3001 -H 0.0.0.0"
+    command: sh -c "npm install && npx next dev --port 3001 --hostname 0.0.0.0"
 
   student:
     image: node:20-alpine
     container_name: moncnam_student
     working_dir: /app
+    stdin_open: true
+    tty: true
     volumes:
-      - ./frontend_eleves:/app
+      - ./frontend_apprenti:/app
     ports:
       - "3002:3002"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - BACKEND_INTERNAL_URL=http://backend:8000/api
       - WATCHPACK_POLLING=true
-    command: sh -c "npm install && npm run dev -- -p 3002 -H 0.0.0.0"
+    command: sh -c "npm install && npx next dev --port 3002 --hostname 0.0.0.0"
 
 volumes:
   db_data:

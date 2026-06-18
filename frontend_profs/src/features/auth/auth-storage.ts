@@ -6,8 +6,8 @@ export type StoredUser = {
   department?: string | null;
 };
 
-const TOKEN_KEY = 'hodory_teacher_token';
-const USER_KEY = 'hodory_teacher_user';
+const TOKEN_KEY = 'moncnam_teacher_token';
+const USER_KEY = 'moncnam_teacher_user';
 
 function isBrowser() {
   return typeof window !== 'undefined' && typeof localStorage !== 'undefined';

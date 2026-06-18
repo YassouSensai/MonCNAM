@@ -52,7 +52,7 @@ export function QrCodePreview({
           className='h-full w-full'
         />
       ) : (
-        <div className='text-muted-foreground text-sm'>Generating QR…</div>
+        <div className='text-muted-foreground text-sm'>Génération du QR…</div>
       )}
     </div>
   );

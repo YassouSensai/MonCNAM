@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const SESSION_COOKIE = 'hodory_session';
+const SESSION_COOKIE = 'moncnam_session';
 
 function isPublicPath(pathname: string) {
   if (pathname.startsWith('/auth')) return true;
@@ -15,12 +15,12 @@ function getRoleFromCookie(request: NextRequest): string | undefined {
   const raw = request.cookies.get(SESSION_COOKIE)?.value;
   if (!raw) return undefined;
   try {
-    const json = atob(raw);
-    const parsed = JSON.parse(json) as {
-      role?: string;
-      user?: { role?: string };
-    };
-    return parsed.user?.role ?? parsed.role;
+    // atob produces a binary string; re-encode as UTF-8 bytes to handle accents
+    const binary = atob(raw);
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    const json = new TextDecoder('utf-8').decode(bytes);
+    const parsed = JSON.parse(json) as { user?: { role?: string } };
+    return parsed.user?.role;
   } catch {
     return undefined;
   }

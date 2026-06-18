@@ -7,7 +7,9 @@ export const SCHEDULE_DAYS = [
   'Monday',
   'Tuesday',
   'Wednesday',
-  'Thursday'
+  'Thursday',
+  'Friday',
+  'Saturday',
 ] as const;
 
 export type ScheduleDay = (typeof SCHEDULE_DAYS)[number];

@@ -1,9 +1,11 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const BACKEND_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') ??
-  'http://127.0.0.1:8000/api';
+const BACKEND_BASE_URL = (
+  process.env.BACKEND_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://127.0.0.1:8000/api'
+).replace(/\/+$/, '');
 
 const HOP_BY_HOP_REQUEST_HEADERS = new Set([
   'connection',

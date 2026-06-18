@@ -26,7 +26,7 @@ type Props = {
 export function ConfirmDialog({
   title,
   description,
-  confirmLabel = 'Confirm',
+  confirmLabel = 'Confirmer',
   destructive = false,
   disabled,
   trigger,
@@ -41,7 +41,7 @@ export function ConfirmDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
           <AlertDialogAction
             disabled={disabled}
             className={destructive ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : undefined}

@@ -11,6 +11,7 @@ Authentication: All endpoints require a valid JWT token with teacher role.
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlmodel import Session, select
 from typing import List, Dict, Any, Optional
+from datetime import date
 
 from ..core.database import get_session
 from ..auth.router import get_current_teacher
@@ -113,6 +114,91 @@ async def get_teacher_overview(
 ) -> Dict[str, Any]:
     controller = TeacherController(db)
     return controller.get_teacher_overview(current_user.id, sessions_limit=sessions_limit)
+
+
+# ==================== SCHEDULE ENDPOINT ====================
+
+@teacher_router.get(
+    "/schedule",
+    summary="Get My Schedule",
+    description="Emploi du temps de l'intervenant pour une semaine donnée (sdays + fallback template)."
+)
+async def get_teacher_schedule(
+    week_start: Optional[date] = Query(
+        default=None,
+        description="Lundi de la semaine souhaitée (YYYY-MM-DD). Omis = template récurrent."
+    ),
+    current_user: User = Depends(get_current_teacher),
+    db: Session = Depends(get_session)
+) -> Dict[str, Any]:
+    """
+    Retourne les sdays (emploi du temps) pour les modules de l'intervenant.
+    Pour chaque niveau dont l'intervenant enseigne un module, retourne les créneaux
+    de la semaine demandée (avec fallback template).
+    """
+    from ..models.schedule import Schedule
+    from ..models.sday import SDay
+    from ..models.module import Module as ModuleModel
+
+    teacher = db.exec(
+        select(Teacher).where(Teacher.user_id == current_user.id)
+    ).first()
+    if not teacher:
+        raise HTTPException(status_code=404, detail="Teacher profile not found.")
+
+    # Modules de l'intervenant
+    teacher_modules = db.exec(
+        select(TeacherModules).where(TeacherModules.teacher_id == teacher.id)
+    ).all()
+    module_ids = {tm.module_id for tm in teacher_modules}
+
+    # Niveaux concernés
+    modules = db.exec(
+        select(ModuleModel).where(ModuleModel.id.in_(module_ids))
+    ).all() if module_ids else []
+    level_ids = {m.level_id for m in modules if m.level_id}
+
+    all_sdays = []
+    for level_id in level_ids:
+        schedule = db.exec(
+            select(Schedule).where(Schedule.level_id == level_id)
+        ).first()
+        if not schedule:
+            continue
+
+        raw = db.exec(select(SDay).where(SDay.schedule_id == schedule.id)).all()
+
+        if week_start is not None:
+            dated = [s for s in raw if s.week_start == week_start]
+            template = [s for s in raw if s.week_start is None]
+            dated_keys = {(s.day, s.time) for s in dated}
+            sdays_for_level = dated + [s for s in template if (s.day, s.time) not in dated_keys]
+        else:
+            sdays_for_level = [s for s in raw if s.week_start is None]
+
+        # Filtrer uniquement les créneaux des modules de cet intervenant
+        sdays_for_level = [s for s in sdays_for_level if s.module_id in module_ids]
+
+        mod_map = {m.id: m for m in modules}
+        for sday in sdays_for_level:
+            mod = mod_map.get(sday.module_id)
+            all_sdays.append({
+                "id": sday.id,
+                "day": sday.day.value if sday.day else None,
+                "time": sday.time,
+                "module_id": sday.module_id,
+                "module_name": mod.name if mod else None,
+                "module_code": mod.code if mod else None,
+                "room": mod.room if mod else None,
+                "level_id": level_id,
+                "week_start": sday.week_start.isoformat() if sday.week_start else None,
+            })
+
+    return {
+        "success": True,
+        "week_start": week_start.isoformat() if week_start else None,
+        "sdays": all_sdays,
+    }
 
 
 # ==================== MODULE ENDPOINTS ====================

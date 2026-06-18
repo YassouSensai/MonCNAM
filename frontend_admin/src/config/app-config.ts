@@ -1,4 +1,4 @@
 export const APP_CONFIG = {
-  name: 'Hodory Admin',
-  copyright: 'Hodory © 2025. All rights reserved.'
+  name: 'MonCNAM Admin',
+  copyright: 'MonCNAM © 2025. Tous droits réservés.'
 };

@@ -13,22 +13,21 @@ export default function NotFound() {
         404
       </span>
       <h2 className='font-heading my-2 text-2xl font-bold'>
-        Something&apos;s missing
+        Page introuvable
       </h2>
       <p>
-        Sorry, the page you are looking for doesn&apos;t exist or has been
-        moved.
+        Désolé, la page que vous recherchez n&apos;existe pas ou a été déplacée.
       </p>
       <div className='mt-8 flex justify-center gap-2'>
         <Button onClick={() => router.back()} variant='default' size='lg'>
-          Go back
+          Retour
         </Button>
         <Button
           onClick={() => router.push('/dashboard')}
           variant='ghost'
           size='lg'
         >
-          Back to Home
+          Accueil
         </Button>
       </div>
     </div>

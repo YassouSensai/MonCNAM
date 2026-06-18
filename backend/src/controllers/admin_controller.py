@@ -159,8 +159,8 @@ class AdminController:
             
         Example:
             students_data = [
-                {"full_name": "John Doe", "email": "john@example.com", "password": "pass123", "department": "CS", "level_id": 1},
-                {"full_name": "Jane Smith", "email": "jane@example.com", "password": "pass456", "department": "CS", "level_id": 1}
+                {"full_name": "John Doe", "email": "john@lecnam.net", "password": "pass123", "department": "CS", "level_id": 1},
+                {"full_name": "Jane Smith", "email": "jane@lecnam.net", "password": "pass456", "department": "CS", "level_id": 1}
             ]
         """
         added_students = []
@@ -568,6 +568,7 @@ class AdminController:
         self,
         name: str,
         level_id: int,
+        code: str = None,
         credits: Optional[int] = None,
         description: Optional[str] = None,
         semester: Optional[int] = None,
@@ -611,6 +612,7 @@ class AdminController:
         
         module = Module(
             name=name,
+            code=code,
             level_id=level_id,
             credits=credits,
             description=description,
@@ -738,18 +740,20 @@ class AdminController:
         level_id: int,
         day: ScheduleDays,
         time: str,
-        module_id: int
+        module_id: int,
+        week_start=None,
     ) -> SDay:
         """
         Add an s_day to the schedule of a level.
         Module must have the same level_id as the level.
-        
+
         Args:
             level_id: ID of the level
             day: Day of the week (ScheduleDays enum)
             time: Time string (e.g., "08:00-10:00")
             module_id: ID of the module
-            
+            week_start: date (lundi) ou None pour template récurrent
+
         Returns:
             SDay: The created s_day
         """
@@ -762,7 +766,7 @@ class AdminController:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No schedule found for level {level_id}. Create one first."
             )
-        
+
         # Verify module exists and belongs to same level
         module = self.session.get(Module, module_id)
         if not module:
@@ -770,47 +774,51 @@ class AdminController:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Module with ID {module_id} not found"
             )
-        
+
         if module.level_id != level_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Module level ({module.level_id}) does not match schedule level ({level_id})"
             )
-        
+
         # Create s_day
         sday = SDay(
             day=day,
             time=time,
             schedule_id=schedule.id,
-            module_id=module_id
+            module_id=module_id,
+            week_start=week_start,
         )
         self.session.add(sday)
-        
+
         # Update schedule last_updated
         schedule.last_updated = datetime.utcnow()
         self.session.add(schedule)
-        
+
         self.session.commit()
         self.session.refresh(sday)
-        
+
         return sday
-    
+
     def update_sday_of_schedule(
         self,
         sday_id: int,
         day: Optional[ScheduleDays] = None,
         time: Optional[str] = None,
-        module_id: Optional[int] = None
+        module_id: Optional[int] = None,
+        week_start=None,
+        update_week_start: bool = False,
     ) -> SDay:
         """
         Update an existing s_day in the schedule.
-        
+
         Args:
             sday_id: ID of the s_day to update
             day: New day (optional)
             time: New time (optional)
             module_id: New module ID (optional)
-            
+            week_start: Nouvelle date de semaine (optional, None = template)
+
         Returns:
             SDay: Updated s_day
         """
@@ -820,9 +828,9 @@ class AdminController:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"SDay with ID {sday_id} not found"
             )
-        
+
         schedule = self.session.get(Schedule, sday.schedule_id)
-        
+
         if day:
             sday.day = day
         if time:
@@ -841,16 +849,18 @@ class AdminController:
                     detail="Module level does not match schedule level"
                 )
             sday.module_id = module_id
-        
+        if update_week_start:
+            sday.week_start = week_start
+
         # Update schedule last_updated
         if schedule:
             schedule.last_updated = datetime.utcnow()
             self.session.add(schedule)
-        
+
         self.session.add(sday)
         self.session.commit()
         self.session.refresh(sday)
-        
+
         return sday
     
     def delete_sday_from_schedule(self, sday_id: int) -> dict:
@@ -887,214 +897,191 @@ class AdminController:
     
     def monitor_attendance(self) -> dict:
         """
-        Display ALL system data: levels, students, modules, teachers,
-        teacher assignments, sessions, and attendance records.
-        
-        Returns:
-            dict: Complete system data organized by level
+        Return complete system data organised by level.
+        Uses bulk queries (one per entity type) instead of per-row lookups
+        to avoid N+1 performance issues.
         """
-        # Get all levels
-        levels = self.session.exec(select(Level)).all()
-        
-        system_data = {
-            "levels": [],
-            "summary": {
-                "total_levels": 0,
-                "total_students": 0,
-                "total_teachers": 0,
-                "total_modules": 0,
-                "total_sessions": 0,
-                "total_attendance_records": 0,
-                "attendance_stats": {
-                    "present": 0,
-                    "absent": 0,
-                    "excluded": 0
-                }
-            }
-        }
-        
-        all_teacher_ids = set()
-        
+        # ── 1. Bulk-load every table once ───────────────────────────────
+        levels        = self.session.exec(select(Level)).all()
+        students      = self.session.exec(select(Student)).all()
+        users         = self.session.exec(select(User)).all()
+        modules       = self.session.exec(select(Module)).all()
+        teacher_rows  = self.session.exec(select(Teacher)).all()
+        tm_rows       = self.session.exec(select(TeacherModules)).all()
+        sessions      = self.session.exec(select(ClassSession)).all()
+        enrollments   = self.session.exec(select(Enrollment)).all()
+        records       = self.session.exec(select(AttendanceRecord)).all()
+        schedules     = self.session.exec(select(Schedule)).all()
+        sdays         = self.session.exec(select(SDay)).all()
+
+        # ── 2. Build lookup dicts keyed by id ────────────────────────────
+        user_by_id      = {u.id: u for u in users}
+        module_by_id    = {m.id: m for m in modules}
+        teacher_by_id   = {t.id: t for t in teacher_rows}
+        session_by_id   = {s.id: s for s in sessions}
+        schedule_by_level = {sc.level_id: sc for sc in schedules}
+
+        # one-to-many groupings
+        from collections import defaultdict
+        students_by_level:   dict = defaultdict(list)
+        modules_by_level:    dict = defaultdict(list)
+        tm_by_module:        dict = defaultdict(list)
+        sessions_by_tm:      dict = defaultdict(list)
+        enrollments_by_stud: dict = defaultdict(list)
+        records_by_enroll:   dict = defaultdict(list)
+        sdays_by_schedule:   dict = defaultdict(list)
+
+        for s in students:
+            students_by_level[s.level_id].append(s)
+        for m in modules:
+            modules_by_level[m.level_id].append(m)
+        for tm in tm_rows:
+            tm_by_module[tm.module_id].append(tm)
+        for sess in sessions:
+            sessions_by_tm[sess.teacher_module_id].append(sess)
+        for e in enrollments:
+            enrollments_by_stud[e.student_id].append(e)
+        for r in records:
+            records_by_enroll[r.enrollement_id].append(r)
+        for sd in sdays:
+            sdays_by_schedule[sd.schedule_id].append(sd)
+
+        # ── 3. Summary counters ──────────────────────────────────────────
+        stats = {"present": 0, "absent": 0, "excluded": 0}
+        for r in records:
+            if r.status == AttendanceStatus.PRESENT:
+                stats["present"] += 1
+            elif r.status == AttendanceStatus.ABSENT:
+                stats["absent"] += 1
+            elif r.status == AttendanceStatus.EXCLUDED:
+                stats["excluded"] += 1
+
+        all_teacher_ids = {tm.teacher_id for tm in tm_rows}
+        total_records   = len(records)
+
+        # ── 4. Assemble response ─────────────────────────────────────────
+        levels_data = []
         for level in levels:
-            level_data = {
-                "id": level.id,
-                "name": level.name,
-                "year_level": level.year_level,
-                "students": [],
-                "modules": [],
-                "schedule": None
-            }
-            
-            # Get students in this level
-            students = self.session.exec(
-                select(Student).where(Student.level_id == level.id)
-            ).all()
-            
-            for student in students:
-                student_user = self.session.get(User, student.user_id)
-                
-                # Get student enrollments
-                enrollments = self.session.exec(
-                    select(Enrollment).where(Enrollment.student_id == student.id)
-                ).all()
-                
-                student_enrollments = []
-                for enrollment in enrollments:
-                    module = self.session.get(Module, enrollment.module_id)
-                    
-                    # Get attendance records for this enrollment
-                    attendance_records = self.session.exec(
-                        select(AttendanceRecord).where(
-                            AttendanceRecord.enrollement_id == enrollment.id
-                        )
-                    ).all()
-                    
-                    enrollment_attendance = []
-                    for record in attendance_records:
-                        session_obj = self.session.get(ClassSession, record.session_id)
-                        enrollment_attendance.append({
-                            "record_id": record.id,
-                            "session_id": record.session_id,
-                            "session_date": session_obj.date_time if session_obj else None,
-                            "status": record.status.value if record.status else "ABSENT",
-                            "created_at": record.created_at
-                        })
-                        
-                        # Update summary stats
-                        system_data["summary"]["total_attendance_records"] += 1
-                        if record.status == AttendanceStatus.PRESENT:
-                            system_data["summary"]["attendance_stats"]["present"] += 1
-                        elif record.status == AttendanceStatus.ABSENT:
-                            system_data["summary"]["attendance_stats"]["absent"] += 1
-                        elif record.status == AttendanceStatus.EXCLUDED:
-                            system_data["summary"]["attendance_stats"]["excluded"] += 1
-                    
-                    student_enrollments.append({
-                        "enrollment_id": enrollment.id,
-                        "module_id": enrollment.module_id,
-                        "module_name": module.name if module else None,
-                        "is_excluded": enrollment.is_excluded,
-                        "attendance_records": enrollment_attendance
+            # Students
+            students_data = []
+            for student in students_by_level.get(level.id, []):
+                u = user_by_id.get(student.user_id)
+                enrollments_data = []
+                for enroll in enrollments_by_stud.get(student.id, []):
+                    mod = module_by_id.get(enroll.module_id)
+                    attendance_data = [
+                        {
+                            "record_id":    rec.id,
+                            "session_id":   rec.session_id,
+                            "session_date": session_by_id[rec.session_id].date_time
+                                            if rec.session_id in session_by_id else None,
+                            "status":       rec.status.value if rec.status else "ABSENT",
+                            "created_at":   rec.created_at,
+                        }
+                        for rec in records_by_enroll.get(enroll.id, [])
+                    ]
+                    enrollments_data.append({
+                        "enrollment_id":                   enroll.id,
+                        "module_id":                       enroll.module_id,
+                        "module_name":                     mod.name if mod else None,
+                        "is_excluded":                     enroll.is_excluded,
+                        "number_of_absences":              enroll.number_of_absences,
+                        "number_of_absences_justified":    enroll.number_of_absences_justified,
+                        "attendance_records":               attendance_data,
                     })
-                
-                level_data["students"].append({
-                    "id": student.id,
-                    "user_id": student.user_id,
-                    "name": student_user.full_name if student_user else None,
-                    "email": student_user.email if student_user else None,
-                    "enrollments": student_enrollments
+                students_data.append({
+                    "id":          student.id,
+                    "user_id":     student.user_id,
+                    "name":        u.full_name if u else None,
+                    "email":       u.email     if u else None,
+                    "enrollments": enrollments_data,
                 })
-                system_data["summary"]["total_students"] += 1
-            
-            # Get modules in this level
-            modules = self.session.exec(
-                select(Module).where(Module.level_id == level.id)
-            ).all()
-            
-            for module in modules:
-                # Get teachers assigned to this module
-                teacher_modules = self.session.exec(
-                    select(TeacherModules).where(TeacherModules.module_id == module.id)
-                ).all()
-                
-                module_teachers = []
-                for tm in teacher_modules:
-                    teacher = self.session.get(Teacher, tm.teacher_id)
-                    teacher_user = self.session.get(User, teacher.user_id) if teacher else None
-                    all_teacher_ids.add(tm.teacher_id)
-                    
-                    # Get sessions created by this teacher for this module
-                    sessions = self.session.exec(
-                        select(ClassSession).where(
-                            ClassSession.teacher_module_id == tm.id
-                        )
-                    ).all()
-                    
-                    teacher_sessions = []
-                    for sess in sessions:
-                        # Get attendance summary for this session
-                        sess_attendance = self.session.exec(
-                            select(AttendanceRecord).where(
-                                AttendanceRecord.session_id == sess.id
-                            )
-                        ).all()
-                        
-                        present_count = sum(1 for r in sess_attendance if r.status == AttendanceStatus.PRESENT)
-                        absent_count = sum(1 for r in sess_attendance if r.status == AttendanceStatus.ABSENT)
-                        
-                        teacher_sessions.append({
-                            "session_id": sess.id,
-                            "session_code": sess.session_code,
-                            "date_time": sess.date_time,
+
+            # Modules + teachers + sessions
+            modules_data = []
+            for mod in modules_by_level.get(level.id, []):
+                teachers_data = []
+                for tm in tm_by_module.get(mod.id, []):
+                    teacher  = teacher_by_id.get(tm.teacher_id)
+                    t_user   = user_by_id.get(teacher.user_id) if teacher else None
+                    sess_data = []
+                    for sess in sessions_by_tm.get(tm.id, []):
+                        sess_records = records_by_enroll.get(sess.id, [])
+                        # records are keyed by enrollement_id, not session_id —
+                        # build a fast session-level view from the flat list
+                        sr = [rec for rec in records if rec.session_id == sess.id]
+                        present_c = sum(1 for rec in sr if rec.status == AttendanceStatus.PRESENT)
+                        absent_c  = sum(1 for rec in sr if rec.status == AttendanceStatus.ABSENT)
+                        sess_data.append({
+                            "session_id":       sess.id,
+                            "session_code":     sess.session_code,
+                            "date_time":        sess.date_time,
                             "duration_minutes": sess.duration_minutes,
-                            "is_active": sess.is_active,
+                            "is_active":        sess.is_active,
                             "attendance_summary": {
-                                "total": len(sess_attendance),
-                                "present": present_count,
-                                "absent": absent_count
-                            }
+                                "total":   len(sr),
+                                "present": present_c,
+                                "absent":  absent_c,
+                            },
                         })
-                        system_data["summary"]["total_sessions"] += 1
-                    
-                    module_teachers.append({
+                    teachers_data.append({
                         "teacher_module_id": tm.id,
-                        "teacher_id": teacher.id if teacher else None,
-                        "name": teacher_user.full_name if teacher_user else None,
-                        "email": teacher_user.email if teacher_user else None,
-                        "sessions": teacher_sessions
+                        "teacher_id":        teacher.id if teacher else None,
+                        "name":              t_user.full_name if t_user else None,
+                        "email":             t_user.email     if t_user else None,
+                        "sessions":          sess_data,
                     })
-                
-                level_data["modules"].append({
-                    "id": module.id,
-                    "name": module.name,
-                    "code": module.code,
-                    "room": module.room,
-                    "teachers": module_teachers
+                modules_data.append({
+                    "id":       mod.id,
+                    "name":     mod.name,
+                    "code":     mod.code,
+                    "room":     mod.room,
+                    "teachers": teachers_data,
                 })
-                system_data["summary"]["total_modules"] += 1
-            
-            # Get schedule for this level
-            schedule = self.session.exec(
-                select(Schedule).where(Schedule.level_id == level.id)
-            ).first()
-            
-            if schedule:
-                sdays = self.session.exec(
-                    select(SDay).where(SDay.schedule_id == schedule.id)
-                ).all()
-                
-                schedule_days = []
-                for sday in sdays:
-                    module = self.session.get(Module, sday.module_id)
-                    schedule_days.append({
-                        "id": sday.id,
-                        "day": sday.day.value if sday.day else None,
-                        "time": sday.time,
-                        "module_id": sday.module_id,
-                        "module_name": module.name if module else None
-                    })
-                
-                level_data["schedule"] = {
-                    "id": schedule.id,
-                    "last_updated": schedule.last_updated,
-                    "days": schedule_days
+
+            # Schedule
+            schedule_data = None
+            sc = schedule_by_level.get(level.id)
+            if sc:
+                schedule_data = {
+                    "id":           sc.id,
+                    "last_updated": sc.last_updated,
+                    "days": [
+                        {
+                            "id":          sd.id,
+                            "day":         sd.day.value if sd.day else None,
+                            "time":        sd.time,
+                            "module_id":   sd.module_id,
+                            "module_name": module_by_id[sd.module_id].name
+                                           if sd.module_id in module_by_id else None,
+                        }
+                        for sd in sdays_by_schedule.get(sc.id, [])
+                    ],
                 }
-            
-            system_data["levels"].append(level_data)
-            system_data["summary"]["total_levels"] += 1
-        
-        system_data["summary"]["total_teachers"] = len(all_teacher_ids)
-        
-        # Calculate attendance rate
-        total_records = system_data["summary"]["total_attendance_records"]
-        if total_records > 0:
-            system_data["summary"]["attendance_rate"] = round(
-                (system_data["summary"]["attendance_stats"]["present"] / total_records * 100), 2
-            )
-        else:
-            system_data["summary"]["attendance_rate"] = 0
-        
-        return system_data
+
+            levels_data.append({
+                "id":         level.id,
+                "name":       level.name,
+                "year_level": level.year_level,
+                "students":   students_data,
+                "modules":    modules_data,
+                "schedule":   schedule_data,
+            })
+
+        return {
+            "levels": levels_data,
+            "summary": {
+                "total_levels":             len(levels),
+                "total_students":           len(students),
+                "total_teachers":           len(all_teacher_ids),
+                "total_modules":            len(modules),
+                "total_sessions":           len(sessions),
+                "total_attendance_records": total_records,
+                "attendance_stats":         stats,
+                "attendance_rate":          round(stats["present"] / total_records * 100, 2)
+                                            if total_records else 0,
+            },
+        }
     
     def generate_report(self, admin_id: int, period_start: datetime, period_end: datetime) -> dict:
         """

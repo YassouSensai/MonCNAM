@@ -188,6 +188,29 @@ export async function getSessionAttendance(token: string, sessionId: number) {
   );
 }
 
+export type TeacherScheduleSDay = {
+  id: number;
+  day: string;
+  time: string;
+  module_id: number;
+  module_name: string | null;
+  module_code: string | null;
+  room: string | null;
+  level_id: number;
+  week_start: string | null;
+};
+
+export type TeacherScheduleResponse = {
+  success: true;
+  week_start: string | null;
+  sdays: TeacherScheduleSDay[];
+};
+
+export async function getTeacherSchedule(token: string, weekStart?: string) {
+  const qs = weekStart ? `?week_start=${weekStart}` : '';
+  return apiJson<TeacherScheduleResponse>(`/teacher/schedule${qs}`, { token });
+}
+
 export async function getTeacherJustifications(
   token: string,
   statusFilter?: 'pending' | 'approved' | 'rejected'

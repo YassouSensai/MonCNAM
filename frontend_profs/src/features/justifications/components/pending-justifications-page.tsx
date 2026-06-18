@@ -31,7 +31,7 @@ function formatShortDate(value?: string | null) {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('fr-FR', {
     month: 'short',
     day: '2-digit'
   }).format(date);
@@ -137,24 +137,24 @@ export default function PendingJustificationsPage() {
     <div className='flex w-full flex-col gap-6 p-4'>
       <Card>
         <CardHeader>
-          <CardTitle>Justifications</CardTitle>
+          <CardTitle>Justificatifs</CardTitle>
           <CardDescription>
-            Review student submissions and manage absence status.
+            Examinez les soumissions des étudiants et gérez les absences.
           </CardDescription>
         </CardHeader>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
-          <CardDescription>Focus on urgent or specific modules.</CardDescription>
+          <CardTitle>Filtres</CardTitle>
+          <CardDescription>Filtrez par urgence ou par module spécifique.</CardDescription>
         </CardHeader>
         <CardContent className='grid gap-4 md:grid-cols-[1fr_220px_220px_220px]'>
           <div className='grid gap-2'>
-            <Label htmlFor='search'>Search students</Label>
+            <Label htmlFor='search'>Rechercher des étudiants</Label>
             <Input
               id='search'
-              placeholder='Search by name or ID'
+              placeholder='Rechercher par nom ou identifiant'
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -166,7 +166,7 @@ export default function PendingJustificationsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='all'>All modules</SelectItem>
+                <SelectItem value='all'>Tous les modules</SelectItem>
                 {availableModules.map((code) => (
                   <SelectItem key={code} value={code}>
                     {code}
@@ -182,16 +182,16 @@ export default function PendingJustificationsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='pending'>Pending</SelectItem>
-                <SelectItem value='approved'>Approved</SelectItem>
-                <SelectItem value='rejected'>Rejected</SelectItem>
-                <SelectItem value='all'>All</SelectItem>
+                <SelectItem value='pending'>En attente</SelectItem>
+                <SelectItem value='approved'>Approuvé</SelectItem>
+                <SelectItem value='rejected'>Rejeté</SelectItem>
+                <SelectItem value='all'>Tous</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className='grid gap-2'>
-            <Label>Absence date range</Label>
-            <Input type='text' placeholder='Sep 01 - Oct 30' />
+            <Label>Période d'absence</Label>
+            <Input type='text' placeholder='01 sept - 30 oct' />
           </div>
           <div className='flex items-center gap-2'>
             <Switch
@@ -199,27 +199,27 @@ export default function PendingJustificationsPage() {
               checked={urgentOnly}
               onCheckedChange={setUrgentOnly}
             />
-            <Label htmlFor='urgent'>Urgent only</Label>
+            <Label htmlFor='urgent'>Urgents uniquement</Label>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Requests</CardTitle>
-          <CardDescription>Pending submissions in queue.</CardDescription>
+          <CardTitle>Demandes</CardTitle>
+          <CardDescription>Soumissions en attente de traitement.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
+                <TableHead>Étudiant</TableHead>
                 <TableHead>Module</TableHead>
-                <TableHead>Absence date</TableHead>
+                <TableHead>Date d'absence</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Submitted</TableHead>
-                <TableHead>Urgency</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Soumis le</TableHead>
+                <TableHead>Urgence</TableHead>
+                <TableHead>Statut</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -240,7 +240,7 @@ export default function PendingJustificationsPage() {
                   <TableCell>
                     <Button asChild size='sm' variant='ghost'>
                       <Link href={`/dashboard/justifications/review?id=${row.key}`}>
-                        Review
+                        Examiner
                       </Link>
                     </Button>
                   </TableCell>
@@ -249,13 +249,13 @@ export default function PendingJustificationsPage() {
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={8} className='text-muted-foreground'>
-                    Loading…
+                    Chargement…
                   </TableCell>
                 </TableRow>
               ) : filteredRows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className='text-muted-foreground'>
-                    No results.
+                    Aucun résultat.
                   </TableCell>
                 </TableRow>
               ) : null}

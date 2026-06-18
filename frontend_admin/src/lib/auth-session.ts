@@ -1,4 +1,4 @@
-export const SESSION_COOKIE = 'hodory_session';
+export const SESSION_COOKIE = 'moncnam_session';
 
 export type SessionUser = {
   id: string;

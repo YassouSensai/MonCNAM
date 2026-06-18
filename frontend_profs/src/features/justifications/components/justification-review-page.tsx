@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { IconAlertTriangle } from '@tabler/icons-react';
+import { IconAlertTriangle, IconDownload, IconEye } from '@tabler/icons-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/auth-context';
 import {
@@ -27,7 +27,7 @@ function formatDateTime(value?: string | null) {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('fr-FR', {
     month: 'short',
     day: '2-digit',
     hour: '2-digit',
@@ -75,13 +75,25 @@ export default function JustificationReviewPage() {
   const sessionLabel = entry?.session?.date_time ? formatDateTime(entry.session.date_time) : '—';
   const statusLabel = entry?.status ?? '—';
   const notes = entry?.comment ?? '—';
-  const fileUrl = entry?.file_url ?? null;
+  const rawFileUrl = entry?.file_url ?? null;
+
+  // file_url is stored as "uploads/justifications/uuid.ext" — extract just the filename.
+  const fileUrl = React.useMemo(() => {
+    if (!rawFileUrl) return null;
+    const filename = rawFileUrl.split(/[/\\]/).pop();
+    if (!filename) return null;
+    return `/api/backend/files/justifications/${encodeURIComponent(filename)}`;
+  }, [rawFileUrl]);
+
+  const fileExtension = rawFileUrl?.split('.').pop()?.toLowerCase() ?? '';
+  const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension);
+  const isPdf = fileExtension === 'pdf';
 
   const submitDecision = async (decision: 'approve' | 'reject') => {
     if (!token) return;
     if (!entry) return;
     if (decision === 'reject' && !teacherNotes.trim()) {
-      toast.error('Please provide a rejection reason.');
+      toast.error('Veuillez fournir une raison de rejet.');
       return;
     }
     setIsSubmitting(true);
@@ -90,7 +102,7 @@ export default function JustificationReviewPage() {
         decision,
         teacher_notes: teacherNotes.trim() ? teacherNotes.trim() : null
       });
-      toast.success(`Justification ${decision}d.`);
+      toast.success(decision === 'approve' ? 'Justificatif approuvé.' : 'Justificatif rejeté.');
       router.push('/dashboard/justifications');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Action failed');
@@ -103,9 +115,9 @@ export default function JustificationReviewPage() {
     <div className='flex w-full flex-col gap-6 p-4'>
       <Card>
         <CardHeader>
-          <CardTitle>Justification review</CardTitle>
+          <CardTitle>Examen du justificatif</CardTitle>
           <CardDescription>
-            Review evidence and approve or reject the absence request.
+            Examinez les preuves et approuvez ou rejetez la demande d'absence.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -113,20 +125,20 @@ export default function JustificationReviewPage() {
       <div className='grid gap-6 lg:grid-cols-[1.1fr_0.9fr]'>
         <Card>
           <CardHeader>
-            <CardTitle>Student &amp; absence info</CardTitle>
-            <CardDescription>Context for this request.</CardDescription>
+            <CardTitle>Étudiant &amp; information d'absence</CardTitle>
+            <CardDescription>Contexte de cette demande.</CardDescription>
           </CardHeader>
           <CardContent className='grid gap-4 md:grid-cols-2'>
             <div>
               <p className='text-muted-foreground text-xs uppercase'>
-                Student
+                Étudiant
               </p>
               <p className='text-sm font-medium'>
                 {studentName} - {studentId}
               </p>
             </div>
             <div>
-              <p className='text-muted-foreground text-xs uppercase'>Group</p>
+              <p className='text-muted-foreground text-xs uppercase'>Groupe</p>
               <p className='text-sm font-medium'>—</p>
             </div>
             <div>
@@ -134,11 +146,11 @@ export default function JustificationReviewPage() {
               <p className='text-sm font-medium'>{moduleLabel}</p>
             </div>
             <div>
-              <p className='text-muted-foreground text-xs uppercase'>Session</p>
+              <p className='text-muted-foreground text-xs uppercase'>Séance</p>
               <p className='text-sm font-medium'>{sessionLabel}</p>
             </div>
             <div>
-              <p className='text-muted-foreground text-xs uppercase'>Status</p>
+              <p className='text-muted-foreground text-xs uppercase'>Statut</p>
               <Badge variant='secondary'>{statusLabel}</Badge>
             </div>
           </CardContent>
@@ -147,23 +159,19 @@ export default function JustificationReviewPage() {
         <Card>
           <CardHeader>
             <CardTitle>Impact</CardTitle>
-            <CardDescription>Attendance totals for this student.</CardDescription>
+            <CardDescription>Totaux de présence pour cet étudiant.</CardDescription>
           </CardHeader>
           <CardContent className='grid gap-3'>
             <div className='flex items-center justify-between rounded-lg border border-border/60 p-3 text-sm'>
-              <span className='text-muted-foreground'>Unjustified</span>
-              <span className='font-medium'>2</span>
+              <span className='text-muted-foreground'>Statut actuel</span>
+              <Badge variant='secondary'>{entry?.status ?? '—'}</Badge>
             </div>
             <div className='flex items-center justify-between rounded-lg border border-border/60 p-3 text-sm'>
-              <span className='text-muted-foreground'>Justified</span>
-              <span className='font-medium'>1</span>
-            </div>
-            <div className='flex items-center justify-between rounded-lg border border-border/60 p-3 text-sm'>
-              <span className='text-muted-foreground'>Exclusion status</span>
-              <span className='font-medium text-amber-600'>Near threshold</span>
+              <span className='text-muted-foreground'>Enregistrement d'absence</span>
+              <span className='font-medium'>{entry?.attendance_record.status ?? '—'}</span>
             </div>
             <p className='text-muted-foreground text-xs'>
-              Approval will change this absence to justified.
+              Approuver marquera cette absence comme justifiée.
             </p>
           </CardContent>
         </Card>
@@ -171,61 +179,86 @@ export default function JustificationReviewPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Justification evidence</CardTitle>
-          <CardDescription>Notes and attachments.</CardDescription>
+          <CardTitle>Preuves du justificatif</CardTitle>
+          <CardDescription>Notes et pièces jointes.</CardDescription>
         </CardHeader>
-        <CardContent className='grid gap-4 lg:grid-cols-[1.1fr_0.9fr]'>
-          <div className='grid gap-3'>
-            <div className='rounded-lg border border-border/60 p-4'>
-              <p className='text-xs uppercase text-muted-foreground'>Type</p>
-              <p className='text-sm font-medium'>Justification</p>
-              <p className='text-xs uppercase text-muted-foreground mt-3'>Notes</p>
-              <p className='text-sm text-muted-foreground'>{notes}</p>
+        <CardContent className='grid gap-4'>
+          <div className='rounded-lg border border-border/60 p-4'>
+            <p className='text-xs uppercase text-muted-foreground'>Notes de l'étudiant</p>
+            <p className='mt-1 text-sm text-muted-foreground whitespace-pre-wrap'>{notes}</p>
+          </div>
+
+          {fileUrl ? (
+            <div className='grid gap-3'>
+              <div className='flex items-center justify-between'>
+                <p className='text-sm font-medium'>Pièce jointe</p>
+                <Button asChild size='sm' variant='outline'>
+                  <a href={fileUrl} download target='_blank' rel='noreferrer'>
+                    <IconDownload className='mr-1 h-4 w-4' />
+                    Télécharger
+                  </a>
+                </Button>
+              </div>
+
+              {isImage ? (
+                <div className='overflow-hidden rounded-xl border border-border/60 bg-muted/30'>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={fileUrl}
+                    alt='Justificatif'
+                    className='max-h-[480px] w-full object-contain'
+                  />
+                </div>
+              ) : isPdf ? (
+                <div className='overflow-hidden rounded-xl border border-border/60'>
+                  <iframe
+                    src={fileUrl}
+                    title='Aperçu PDF'
+                    className='h-[480px] w-full'
+                  />
+                </div>
+              ) : (
+                <Alert>
+                  <IconEye className='h-4 w-4' />
+                  <AlertTitle>Aperçu non disponible</AlertTitle>
+                  <AlertDescription>
+                    Ce type de fichier ne peut pas être prévisualisé. Utilisez le bouton Télécharger.
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
-            {fileUrl ? (
-              <Alert>
-                <IconAlertTriangle />
-                <AlertTitle>Attachment</AlertTitle>
-                <AlertDescription>
-                  File URL present. Preview is not implemented in this UI yet.
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <Alert>
-                <IconAlertTriangle />
-                <AlertTitle>No attachment</AlertTitle>
-                <AlertDescription>
-                  This justification has no file attached.
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
-          <div className='flex items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/30 p-6 text-center text-sm text-muted-foreground'>
-            {fileUrl ? 'Attachment preview not implemented.' : 'No attachment.'}
-          </div>
+          ) : (
+            <Alert>
+              <IconAlertTriangle className='h-4 w-4' />
+              <AlertTitle>Aucune pièce jointe</AlertTitle>
+              <AlertDescription>
+                Ce justificatif ne contient pas de fichier joint.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Decision</CardTitle>
-          <CardDescription>Take action or request more info.</CardDescription>
+          <CardTitle>Décision</CardTitle>
+          <CardDescription>Prenez une décision ou demandez plus d'informations.</CardDescription>
         </CardHeader>
         <CardContent className='grid gap-4'>
           <div className='grid gap-2'>
-            <Label htmlFor='reject'>Rejection reason</Label>
+            <Label htmlFor='reject'>Motif de rejet</Label>
             <Textarea
               id='reject'
-              placeholder='Required if rejecting this request.'
+              placeholder='Obligatoire si vous rejetez cette demande.'
               value={teacherNotes}
               onChange={(event) => setTeacherNotes(event.target.value)}
             />
           </div>
           <div className='grid gap-2'>
-            <Label htmlFor='request'>Request more information</Label>
+            <Label htmlFor='request'>Demander plus d'informations</Label>
             <Textarea
               id='request'
-              placeholder='Message to the student about missing information.'
+              placeholder="Message à l'étudiant concernant les informations manquantes."
             />
           </div>
           <div className='flex flex-wrap gap-2'>
@@ -234,27 +267,27 @@ export default function JustificationReviewPage() {
               disabled={!entry || isLoading || isSubmitting}
               onClick={() => submitDecision('approve')}
             >
-              {isSubmitting ? 'Working…' : 'Approve'}
+              {isSubmitting ? 'Traitement…' : 'Approuver'}
             </Button>
             <Button
               variant='destructive'
               disabled={!entry || isLoading || isSubmitting}
               onClick={() => submitDecision('reject')}
             >
-              Reject
+              Rejeter
             </Button>
             <Button variant='outline' disabled>
-              Request more info
+              Demander plus d'informations
             </Button>
           </div>
           {!Number.isFinite(justificationId) ? (
             <p className='text-sm text-muted-foreground'>
-              Missing or invalid justification ID.
+              Identifiant de justificatif manquant ou invalide.
             </p>
           ) : isLoading ? (
-            <p className='text-sm text-muted-foreground'>Loading…</p>
+            <p className='text-sm text-muted-foreground'>Chargement…</p>
           ) : !entry ? (
-            <p className='text-sm text-muted-foreground'>Justification not found.</p>
+            <p className='text-sm text-muted-foreground'>Justificatif introuvable.</p>
           ) : null}
         </CardContent>
       </Card>

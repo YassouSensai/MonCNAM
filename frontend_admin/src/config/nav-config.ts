@@ -34,7 +34,7 @@ import { NavItem } from '@/types';
  */
 export const navItems: NavItem[] = [
   {
-    title: 'Dashboard',
+    title: 'Tableau de bord',
     url: '/dashboard/overview',
     icon: 'dashboard',
     isActive: false,
@@ -42,7 +42,7 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Students',
+    title: 'Étudiants',
     url: '/dashboard/students',
     icon: 'students',
     shortcut: ['s', 't'],
@@ -50,7 +50,7 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Teachers',
+    title: 'Intervenants',
     url: '/dashboard/teachers',
     icon: 'teachers',
     shortcut: ['t', 'c'],
@@ -66,7 +66,7 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Module Assignments',
+    title: 'Affectation modules',
     url: '/dashboard/module-assignments',
     icon: 'assignments',
     shortcut: ['m', 'a'],
@@ -74,7 +74,7 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Schedules',
+    title: 'Emplois du temps',
     url: '/dashboard/schedules',
     icon: 'schedules',
     shortcut: ['s', 'c'],

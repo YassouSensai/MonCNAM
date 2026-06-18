@@ -4,7 +4,7 @@ Create a student user in the local DB for quick mobile app testing.
 
 Usage:
   cd backend
-  python scripts/create_student.py --email amine.hadj3@student.university.dz --password student123 --full-name "Amine Hadj" --department "Computer Science"
+  python scripts/create_student.py --email amine.hadj3@lecnam.net --password student123 --full-name "Amine Hadj" --department "Computer Science"
 
 By default, the student is assigned to the first Level (lowest id) and enrolled
 into all modules of that level (so attendance marking works immediately).

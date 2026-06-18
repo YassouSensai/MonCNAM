@@ -44,39 +44,39 @@ export function LoginForm() {
           }>('/auth/login', { method: 'POST', body: { email, password } });
 
           if (!result?.access_token || !result?.user) {
-            throw new Error('Invalid login response');
+            throw new Error('Réponse de connexion invalide');
           }
           if (result.user.role !== 'teacher') {
-            throw new Error('This account is not a teacher.');
+            throw new Error('Ce compte n\'est pas un compte enseignant.');
           }
 
           login({ token: result.access_token, user: result.user });
           router.replace('/dashboard/overview');
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : 'Login failed');
+          toast.error(error instanceof Error ? error.message : 'Échec de la connexion');
         } finally {
           setIsSubmitting(false);
         }
       }}
     >
       <div className='space-y-2'>
-        <Label htmlFor='email'>Email</Label>
+        <Label htmlFor='email'>E-mail</Label>
         <Input
           id='email'
           name='email'
           type='email'
-          placeholder='teacher@university.dz'
+          placeholder='teacher@lecnam.net'
           autoComplete='email'
           required
         />
       </div>
       <div className='space-y-2'>
-        <Label htmlFor='password'>Password</Label>
+        <Label htmlFor='password'>Mot de passe</Label>
         <Input
           id='password'
           name='password'
           type='password'
-          placeholder='Password'
+          placeholder='Mot de passe'
           autoComplete='current-password'
           required
         />
@@ -86,7 +86,7 @@ export function LoginForm() {
         type='submit'
         disabled={isSubmitting}
       >
-        {isSubmitting ? 'Signing in…' : 'Sign in'}
+        {isSubmitting ? 'Connexion…' : 'Se connecter'}
       </Button>
     </form>
   );

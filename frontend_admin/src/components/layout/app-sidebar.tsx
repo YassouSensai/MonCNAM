@@ -40,7 +40,6 @@ import {
   IconLogout,
   IconUserCircle
 } from '@tabler/icons-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Icons } from '../icons';
@@ -84,23 +83,18 @@ export default function AppSidebar() {
               state === 'collapsed' ? 'justify-center' : ''
             )}
           >
-            <Image
-              src='/assets/logo.svg'
-              alt='Hodory'
-              width={state === 'expanded' ? 54 : 64}
-              height={state === 'expanded' ? 54 : 64}
-              className='shrink-0 rounded-lg bg-white p-0.5'
-              priority
-            />
+            <span className='bg-[#D60028] text-white font-black text-sm px-2 py-0.5 rounded tracking-widest shrink-0'>
+              CNAM
+            </span>
             {state === 'expanded' ? (
-              <span className='text-2xl font-semibold'>Hodory</span>
+              <span className='font-bold text-base'>MonCNAM</span>
             ) : null}
           </Link>
         </div>
       </SidebarHeader>
       <SidebarContent className='overflow-x-hidden'>
         <SidebarGroup>
-          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          <SidebarGroupLabel>Vue d&apos;ensemble</SidebarGroupLabel>
           <SidebarMenu>
             {overviewItems.map((item) => {
               const Icon = item.icon ? Icons[item.icon] : Icons.logo;
@@ -228,13 +222,13 @@ export default function AppSidebar() {
                     onClick={() => router.push('/dashboard/profile')}
                   >
                     <IconUserCircle className='mr-2 h-4 w-4' />
-                    Personal Info
+                    Informations personnelles
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push('/auth/logout')}>
                   <IconLogout className='mr-2 h-4 w-4' />
-                  Logout
+                  Déconnexion
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -9,13 +9,6 @@ export type HodoryQrPayloadV1 = {
     startedAt?: string | null;
     durationMinutes?: number;
   };
-  network?: {
-    ssid: string;
-    password?: string;
-    security?: 'WPA' | 'WEP' | 'nopass';
-  };
-  // Optional hint for clients; student app may ignore and use its own config.
-  apiBaseUrl?: string;
 };
 
 export function encodeQrPayload(payload: HodoryQrPayloadV1) {

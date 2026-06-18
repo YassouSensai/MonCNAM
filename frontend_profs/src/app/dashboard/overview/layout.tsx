@@ -14,8 +14,8 @@ import type { ReactNode } from 'react';
 import * as React from 'react';
 
 export default function OverViewLayout({
-  bar_stats,
-  area_stats,
+  bar_stats: _bar_stats,
+  area_stats: _area_stats,
 }: {
   bar_stats: ReactNode;
   area_stats: ReactNode;
@@ -59,13 +59,13 @@ export default function OverViewLayout({
           .sort((a, b) => new Date(a.date_time).getTime() - new Date(b.date_time).getTime())[0];
 
         if (upcoming) {
-          const time = new Intl.DateTimeFormat('en-US', {
+          const time = new Intl.DateTimeFormat('fr-FR', {
             hour: '2-digit',
             minute: '2-digit'
           }).format(new Date(upcoming.date_time));
           setNextSessionLabel(`${upcoming.module.code} - ${time}`);
         } else {
-          setNextSessionLabel('No upcoming sessions');
+          setNextSessionLabel('Aucune séance à venir');
         }
 
         // This is a count of excluded attendance records across sessions (not unique students).
@@ -87,40 +87,40 @@ export default function OverViewLayout({
 
   const summaryCards = [
     {
-      title: "Today's sessions",
+      title: "Séances aujourd'hui",
       value: todaySessionsCount === null ? '—' : String(todaySessionsCount),
-      meta: `Next: ${nextSessionLabel}`
+      meta: `Prochaine : ${nextSessionLabel}`
     },
     {
-      title: 'Active session',
-      value: isActive ? `${module} - Room ${room}` : 'No active session',
-      meta: isActive ? `${remainingMinutes} min remaining` : 'Stopped'
+      title: 'Séance active',
+      value: isActive ? `${module} - Salle ${room}` : 'Aucune séance active',
+      meta: isActive ? `${remainingMinutes} min restantes` : 'Arrêtée'
     },
     {
-      title: 'Pending justifications',
+      title: 'Justificatifs en attente',
       value:
         pendingJustifications === null ? '—' : String(pendingJustifications),
-      meta: 'Requests awaiting your review'
+      meta: 'Demandes à traiter'
     },
     {
-      title: 'Excluded (records)',
+      title: 'Exclusions (relevés)',
       value: excludedRecordsCount === null ? '—' : String(excludedRecordsCount),
-      meta: 'Across teacher sessions'
+      meta: 'Sur l\'ensemble des séances'
     }
   ];
 
   return (
     <AttendanceProvider defaultModule={defaultModule}>
       <PageContainer
-        pageTitle='Dashboard'
-        pageDescription='At-a-glance attendance control, live sessions, and quick actions.'
+        pageTitle='Tableau de bord'
+        pageDescription='Suivi des présences, sessions en direct et actions rapides.'
         pageHeaderAction={
           <div className='flex flex-wrap gap-2'>
             <Button asChild>
-              <Link href='/dashboard/session'>Start session</Link>
+              <Link href='/dashboard/session'>Démarrer une séance</Link>
             </Button>
             <Button asChild variant='outline'>
-              <Link href='/dashboard/attendance'>View records</Link>
+              <Link href='/dashboard/attendance'>Voir les présences</Link>
             </Button>
           </div>
         }
@@ -131,26 +131,25 @@ export default function OverViewLayout({
           <div className='relative z-10 grid gap-4 md:grid-cols-[1.3fr_0.7fr]'>
             <div>
               <h2 className='text-2xl font-semibold text-slate-900 dark:text-slate-900'>
-                Teaching control center
+                Espace de gestion pédagogique
               </h2>
 	              <p className='text-muted-foreground mt-2 text-sm'>
-	                Monitor attendance, launch sessions, and review justifications
-	                in one place.
+	                Suivez les présences, lancez des séances et traitez les justificatifs depuis un seul endroit.
 	              </p>
 	            </div>
             <div className='flex flex-col gap-3 rounded-xl border border-border/60 bg-background/80 p-4'>
               <div className='flex items-center justify-between'>
-                <span className='text-sm font-medium'>Active session</span>
+                <span className='text-sm font-medium'>Séance active</span>
                 {isActive ? (
                   <Badge className='bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400'>
-                    Live
+                    En cours
                   </Badge>
                 ) : (
-                  <Badge variant='secondary'>Stopped</Badge>
+                  <Badge variant='secondary'>Arrêtée</Badge>
                 )}
               </div>
               <div className='text-sm text-muted-foreground'>
-                {isActive ? `${module} - Room ${room}` : 'No active session'}
+                {isActive ? `${module} - Salle ${room}` : 'Aucune séance active'}
               </div>
               {isActive ? (
                 <div className='text-xs font-medium tracking-widest text-foreground'>
@@ -158,15 +157,15 @@ export default function OverViewLayout({
                 </div>
               ) : null}
               <div className='text-lg font-semibold'>
-                {isActive ? `${remainingMinutes} minutes remaining` : 'No active session'}
+                {isActive ? `${remainingMinutes} minutes restantes` : 'Aucune séance active'}
               </div>
               {isActive ? (
                 <Button asChild size='sm' variant='outline'>
-                  <Link href='/dashboard/active-session'>Go to live view</Link>
+                  <Link href='/dashboard/active-session'>Voir la séance en direct</Link>
                 </Button>
               ) : (
                 <Button asChild size='sm' variant='outline'>
-                  <Link href='/dashboard/session'>Create session</Link>
+                  <Link href='/dashboard/session'>Créer une séance</Link>
                 </Button>
               )}
             </div>
@@ -191,10 +190,6 @@ export default function OverViewLayout({
           ))}
         </div>
 
-        <div className='mt-6 grid gap-4 lg:grid-cols-2'>
-          {bar_stats}
-          {area_stats}
-        </div>
       </PageContainer>
     </AttendanceProvider>
   );

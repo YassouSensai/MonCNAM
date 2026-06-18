@@ -32,13 +32,12 @@ import {
 import { useAuth } from '@/features/auth/auth-context';
 import { getSessionAttendance, type SessionAttendanceResponse } from '@/lib/teacher-api';
 import { encodeQrPayload, type HodoryQrPayloadV1 } from '@/lib/qr-payload';
-import { resolveAdvertisedApiBaseUrl } from '@/lib/electron-hotspot';
 
 function formatClock(value?: string | null) {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('fr-FR', {
     hour: '2-digit',
     minute: '2-digit'
   }).format(date);
@@ -50,6 +49,7 @@ export default function ActiveSessionPage() {
   const { token } = useAuth();
   const {
     isActive,
+    isHydrated,
     module,
     room,
     code,
@@ -58,25 +58,17 @@ export default function ActiveSessionPage() {
     sessionId,
     startedAt,
     durationMinutes,
-    wifiSsid,
-    wifiPassword,
-    wifiSecurity,
-    hotspotPhase,
-    hotspotStatus,
-    hotspotError,
-    startHotspot,
-    stopHotspot,
-    refreshHotspot
   } = useSessionState();
   const router = useRouter();
   const [attendance, setAttendance] = React.useState<SessionAttendanceResponse | null>(null);
   const [loadError, setLoadError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    if (!isHydrated) return;
     if (!isActive) {
       router.push('/dashboard/session');
     }
-  }, [isActive, router]);
+  }, [isActive, isHydrated, router]);
 
   React.useEffect(() => {
     if (!token || !sessionId || !isActive) return;
@@ -102,32 +94,6 @@ export default function ActiveSessionPage() {
     };
   }, [token, sessionId, isActive]);
 
-  React.useEffect(() => {
-    if (!isActive) return;
-    let cancelled = false;
-    const tick = async () => {
-      try {
-        await refreshHotspot();
-      } catch {
-        // Ignore.
-      }
-    };
-    tick().catch(() => null);
-    const interval = setInterval(() => {
-      if (cancelled) return;
-      tick().catch(() => null);
-    }, 5000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [isActive, refreshHotspot]);
-
-  const hotspotIpv4 = React.useMemo(() => {
-    if (!hotspotStatus || 'error' in hotspotStatus) return null;
-    return hotspotStatus.ipv4Address ?? null;
-  }, [hotspotStatus]);
-
   const presentStudents = React.useMemo(() => {
     const rows = attendance?.students ?? [];
     return rows
@@ -148,8 +114,8 @@ export default function ActiveSessionPage() {
   }, [attendance]);
 
   const liveEvents = React.useMemo(() => {
-    if (loadError) return [{ message: `Last refresh failed: ${loadError}` }];
-    return [{ message: 'Live updates refresh every 5 seconds.' }];
+    if (loadError) return [{ message: `Dernière actualisation échouée : ${loadError}` }];
+    return [{ message: 'Mise à jour toutes les 5 secondes.' }];
   }, [loadError]);
 
   const qrValue = React.useMemo(() => {
@@ -164,32 +130,10 @@ export default function ActiveSessionPage() {
         startedAt,
         durationMinutes
       },
-      network: wifiSsid
-        ? {
-            ssid: wifiSsid,
-            password: wifiSecurity === 'nopass' ? undefined : wifiPassword,
-            security: wifiSecurity
-          }
-        : undefined,
-      apiBaseUrl: resolveAdvertisedApiBaseUrl({
-        configured: process.env.NEXT_PUBLIC_API_URL,
-        hotspotIpv4
-      })
     };
 
     return encodeQrPayload(payload);
-  }, [
-    sessionId,
-    code,
-    module,
-    room,
-    startedAt,
-    durationMinutes,
-    wifiSsid,
-    wifiPassword,
-    wifiSecurity,
-    hotspotIpv4
-  ]);
+  }, [sessionId, code, module, room, startedAt, durationMinutes]);
 
   const formatCountdown = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -212,7 +156,7 @@ export default function ActiveSessionPage() {
 
   const exportCurrentList = () => {
     const rows = [
-      ['Student', 'Time'],
+      ['Étudiant', 'Heure'],
       ...presentStudents.map((student) => [student.name, student.time])
     ];
     const csv = rows.map((row) => row.join(',')).join('\n');
@@ -223,9 +167,9 @@ export default function ActiveSessionPage() {
     <div className='flex w-full flex-col gap-6 p-4'>
       <Card>
         <CardHeader>
-          <CardTitle>Active session</CardTitle>
+          <CardTitle>Séance active</CardTitle>
           <CardDescription>
-            Projection view and live attendance monitoring.
+            Vue de projection et suivi des présences en direct.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -233,8 +177,8 @@ export default function ActiveSessionPage() {
       <div className='grid gap-6 lg:grid-cols-[1.1fr_0.9fr]'>
         <Card className='overflow-hidden'>
           <CardHeader>
-            <CardTitle>Projection panel</CardTitle>
-            <CardDescription>Display this to students.</CardDescription>
+            <CardTitle>Panneau de projection</CardTitle>
+            <CardDescription>Affichez ceci aux étudiants.</CardDescription>
           </CardHeader>
           <CardContent className='grid gap-6'>
             <div className='grid gap-4 rounded-xl border border-border/60 bg-muted/30 p-4 text-center'>
@@ -242,34 +186,18 @@ export default function ActiveSessionPage() {
                 <span>{module}</span>
                 {isActive ? (
                   <Badge className='bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400'>
-                    Active
+                    En cours
                   </Badge>
                 ) : (
-                  <Badge variant='secondary'>Stopped</Badge>
+                  <Badge variant='secondary'>Arrêtée</Badge>
                 )}
               </div>
               <div className='text-3xl font-semibold tracking-widest'>
                 {code}
               </div>
-              <div className='text-sm text-muted-foreground'>Room {room}</div>
-              {wifiSsid ? (
-                <div className='text-xs text-muted-foreground'>
-                  WiFi: <span className='text-foreground font-medium'>{wifiSsid}</span>
-                  {wifiSecurity !== 'nopass' ? (
-                    <>
-                      {' '}
-                      · Password:{' '}
-                      <span className='text-foreground font-medium'>
-                        {wifiPassword || '—'}
-                      </span>
-                    </>
-                  ) : (
-                    <> · Open network</>
-                  )}
-                </div>
-              ) : null}
+              <div className='text-sm text-muted-foreground'>Salle {room}</div>
               <div className='text-2xl font-semibold'>
-                {formatCountdown(remainingSeconds)} remaining
+                {formatCountdown(remainingSeconds)} restant(es)
               </div>
             </div>
             <div className='flex items-center justify-center rounded-2xl border border-dashed border-border/60 bg-white p-4'>
@@ -281,7 +209,7 @@ export default function ActiveSessionPage() {
                 onClick={() => setIsProjectOpen(true)}
                 disabled={!isActive}
               >
-                Project Mode
+                Mode projection
               </Button>
               <Button
                 variant='secondary'
@@ -294,75 +222,12 @@ export default function ActiveSessionPage() {
                   }
                 }}
               >
-                Copy code
+                Copier le code
               </Button>
-            </div>
-            <div className='rounded-lg border border-border/60 bg-muted/30 p-3 text-sm'>
-              <div className='flex flex-wrap items-center justify-between gap-2'>
-                <span className='text-muted-foreground'>Hotspot</span>
-                <Badge
-                  variant={
-                    hotspotPhase === 'active'
-                      ? 'default'
-                      : hotspotPhase === 'error'
-                        ? 'destructive'
-                        : 'secondary'
-                  }
-                >
-                  {hotspotPhase === 'starting'
-                    ? 'Starting…'
-                    : hotspotPhase === 'active'
-                      ? 'Running'
-                      : hotspotPhase === 'inactive'
-                        ? 'Stopped'
-                        : hotspotPhase === 'error'
-                          ? 'Error'
-                          : 'Idle'}
-                </Badge>
-              </div>
-              {hotspotError ? (
-                <p className='mt-2 text-xs text-muted-foreground'>
-                  {hotspotError}
-                </p>
-              ) : hotspotIpv4 ? (
-                <p className='mt-2 text-xs text-muted-foreground'>
-                  Students should reach the backend at{' '}
-                  <span className='font-medium text-foreground'>
-                    http://{hotspotIpv4}:8000
-                  </span>{' '}
-                  (backend must listen on 0.0.0.0).
-                </p>
-              ) : null}
-              <div className='mt-3 flex flex-wrap gap-2'>
-                <Button
-                  size='sm'
-                  variant='secondary'
-                  onClick={() => {
-                    startHotspot({
-                      ssid: wifiSsid,
-                      security: wifiSecurity,
-                      password: wifiSecurity === 'nopass' ? undefined : wifiPassword
-                    }).catch(() => null);
-                  }}
-                  disabled={hotspotPhase === 'starting'}
-                >
-                  Start AP
-                </Button>
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => {
-                    stopHotspot().catch(() => null);
-                  }}
-                  disabled={hotspotPhase === 'starting'}
-                >
-                  Stop AP
-                </Button>
-              </div>
             </div>
             {!isActive ? (
               <div className='rounded-lg border border-border/60 bg-muted/30 p-3 text-center text-sm text-muted-foreground'>
-                Session stopped. Projection and live controls are disabled.
+                Séance terminée. La projection et les contrôles en direct sont désactivés.
               </div>
             ) : null}
           </CardContent>
@@ -371,19 +236,19 @@ export default function ActiveSessionPage() {
         <div className='grid gap-6'>
           <Card>
             <CardHeader>
-              <CardTitle>Live status</CardTitle>
-              <CardDescription>Real-time attendance counters.</CardDescription>
+              <CardTitle>État en direct</CardTitle>
+              <CardDescription>Compteurs de présence en temps réel.</CardDescription>
             </CardHeader>
             <CardContent className='grid gap-4 md:grid-cols-3'>
               <div className='rounded-lg border border-border/60 p-3'>
-                <p className='text-xs text-muted-foreground'>Present</p>
+                <p className='text-xs text-muted-foreground'>Présents</p>
                 <p className='text-lg font-semibold'>
                   {isActive ? liveStats.present : 0}
                 </p>
               </div>
               <div className='rounded-lg border border-border/60 p-3'>
                 <p className='text-xs text-muted-foreground'>
-                  Absent (unmarked)
+                  Absents (non marqués)
                 </p>
                 <p className='text-lg font-semibold'>
                   {isActive ? liveStats.absent : 0}
@@ -400,15 +265,15 @@ export default function ActiveSessionPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Marked present</CardTitle>
-              <CardDescription>Students who checked in.</CardDescription>
+              <CardTitle>Présences confirmées</CardTitle>
+              <CardDescription>Étudiants ayant pointé leur présence.</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Time</TableHead>
+                    <TableHead>Étudiant</TableHead>
+                    <TableHead>Heure</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -427,7 +292,7 @@ export default function ActiveSessionPage() {
                         className='text-muted-foreground'
                         colSpan={2}
                       >
-                        Session stopped.
+                        Séance terminée.
                       </TableCell>
                     </TableRow>
                   )}
@@ -438,8 +303,8 @@ export default function ActiveSessionPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Live events</CardTitle>
-              <CardDescription>Recent session activity.</CardDescription>
+              <CardTitle>Événements en direct</CardTitle>
+              <CardDescription>Activité récente de la séance.</CardDescription>
             </CardHeader>
             <CardContent className='grid gap-2 text-sm'>
               {isActive ? (
@@ -455,7 +320,7 @@ export default function ActiveSessionPage() {
                 ))
               ) : (
                 <div className='rounded-lg border border-border/60 bg-muted/30 p-3 text-muted-foreground'>
-                  No live events. Session stopped.
+                  Aucun événement. Séance terminée.
                 </div>
               )}
             </CardContent>
@@ -463,8 +328,8 @@ export default function ActiveSessionPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Controls</CardTitle>
-              <CardDescription>Session management actions.</CardDescription>
+              <CardTitle>Contrôles</CardTitle>
+              <CardDescription>Actions de gestion de la séance.</CardDescription>
             </CardHeader>
             <CardContent className='flex flex-wrap gap-2'>
             <Button
@@ -472,14 +337,14 @@ export default function ActiveSessionPage() {
               onClick={() => setIsEndOpen(true)}
               disabled={!isActive}
             >
-              End session
+              Terminer la séance
             </Button>
               <Button
                 variant='outline'
                 disabled={!isActive}
                 onClick={exportCurrentList}
               >
-                Export current list
+                Exporter la liste actuelle
               </Button>
             </CardContent>
           </Card>
@@ -489,14 +354,14 @@ export default function ActiveSessionPage() {
       <Dialog open={isEndOpen} onOpenChange={setIsEndOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>End this session?</DialogTitle>
+            <DialogTitle>Terminer cette séance ?</DialogTitle>
             <DialogDescription>
-              Attendance will be finalized and the session will move to summary.
+              Les présences seront finalisées et la séance passera en résumé.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className='gap-2'>
             <Button variant='outline' onClick={() => setIsEndOpen(false)}>
-              Cancel
+              Annuler
             </Button>
             <Button
               variant='destructive'
@@ -509,7 +374,7 @@ export default function ActiveSessionPage() {
                   });
               }}
             >
-              Stop session
+              Arrêter la séance
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -518,9 +383,9 @@ export default function ActiveSessionPage() {
       <Dialog open={isProjectOpen} onOpenChange={setIsProjectOpen}>
         <DialogContent className='h-[90vh] w-[90vw] max-w-none'>
           <DialogHeader>
-            <DialogTitle>Project mode</DialogTitle>
+            <DialogTitle>Mode projection</DialogTitle>
             <DialogDescription>
-              Large display for classroom projection.
+              Grand affichage pour la projection en salle.
             </DialogDescription>
           </DialogHeader>
           <div className='grid h-full gap-6 md:grid-cols-[1.5fr_0.5fr]'>
@@ -532,41 +397,25 @@ export default function ActiveSessionPage() {
             </div>
             <div className='grid gap-4'>
               <div className='rounded-xl border border-border/60 bg-muted/30 p-4 text-center'>
-                <p className='text-sm text-muted-foreground'>Session code</p>
+                <p className='text-sm text-muted-foreground'>Code de séance</p>
                 <p className='text-3xl font-semibold tracking-widest'>
                   {code}
                 </p>
-                {wifiSsid ? (
-                  <p className='mt-2 text-xs text-muted-foreground'>
-                    WiFi: <span className='text-foreground font-medium'>{wifiSsid}</span>
-                    {wifiSecurity !== 'nopass' ? (
-                      <>
-                        {' '}
-                        · Password:{' '}
-                        <span className='text-foreground font-medium'>
-                          {wifiPassword || '—'}
-                        </span>
-                      </>
-                    ) : (
-                      <> · Open network</>
-                    )}
-                  </p>
-                ) : null}
               </div>
               <div className='rounded-xl border border-border/60 bg-muted/30 p-4'>
                 <p className='text-sm font-medium'>{module}</p>
                 <p className='text-muted-foreground text-sm'>
-                  Room {room}
+                  Salle {room}
                 </p>
                 <p className='mt-3 text-lg font-semibold'>
-                  {formatCountdown(remainingSeconds)} remaining
+                  {formatCountdown(remainingSeconds)} restant(es)
                 </p>
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant='outline' onClick={() => setIsProjectOpen(false)}>
-              Close
+              Fermer
             </Button>
           </DialogFooter>
         </DialogContent>
