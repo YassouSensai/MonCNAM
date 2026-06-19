@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portail MonCNAM</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 48px 56px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            max-width: 680px;
+            width: 100%;
+        }
+        .logo-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        .cnam-badge {
+            background-color: #D60028;
+            color: white;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            padding: 6px 14px;
+            border-radius: 6px;
+        }
+        .app-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        h1 {
+            color: #D60028;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+        }
+        p {
+            color: #666;
+            font-size: 14px;
+            margin: 0 0 36px 0;
+        }
+        .links {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        a {
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            transition: opacity 0.2s, transform 0.1s;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 170px;
+        }
+        a:hover { opacity: 0.88; transform: translateY(-1px); }
+        a small {
+            font-size: 11px;
+            font-weight: 400;
+            opacity: 0.85;
+        }
+        .btn-admin    { background-color: #1e293b; }
+        .btn-teacher  { background-color: #D60028; }
+        .btn-student  { background-color: #16a34a; }
+        footer {
+            margin-top: 32px;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-bar">
+            <span class="cnam-badge">CNAM</span>
+            <span class="app-name">MonCNAM</span>
+        </div>
+        <h1>Portail de gestion des présences</h1>
+        <p>Plateforme de la filière FIP Informatique — Conservatoire national des arts et métiers</p>
+        <div class="links">
+            <a href="http://localhost:3000" class="btn-admin">
+                Espace Scolarité
+                <small>Administration</small>
+            </a>
+            <a href="http://localhost:3001" class="btn-teacher">
+                Espace Intervenant
+                <small>Enseignants</small>
+            </a>
+            <a href="http://localhost:3002" class="btn-student">
+                Espace Apprenti
+                <small>Étudiants</small>
+            </a>
+        </div>
+    </div>
+    <footer>© 2025 CNAM – Conservatoire national des arts et métiers. Tous droits réservés.</footer>
+</body>
+</html>
